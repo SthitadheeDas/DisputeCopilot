@@ -1,0 +1,290 @@
+[
+  {
+    "dispute_id": "PP-D-1001",
+    "create_time": "2026-10-29T10:15:00Z",
+    "update_time": "2026-10-29T10:15:00Z",
+    "dispute_amount": {
+      "currency_code": "USD",
+      "value": "349.99"
+    },
+    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "dispute_state": "REQUIRED_ACTION",
+    "dispute_lifecycle_stage": "INQUIRY",
+    "dispute_channel": "INTERNAL",
+    "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+    "seller_response_due_date": "2026-11-08T18:00:00Z",
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "REPLACE_WITH_TXN_ID_1",
+        "buyer_transaction_id": "BUYER_TXN_1001",
+        "transaction_status": "COMPLETED",
+        "gross_amount": {
+          "currency_code": "USD",
+          "value": "349.99"
+        },
+        "buyer": {
+          "name": "Sarah Jenkins"
+        },
+        "seller_protection_eligible": true,
+        "items": [
+          {
+            "item_name": "Sony WH-1000XM5 Wireless Headphones",
+            "item_description": "Premium noise cancelling over-ear headphones, Black",
+            "item_price": {
+              "currency_code": "USD",
+              "value": "349.99"
+            },
+            "item_quantity": "1"
+          }
+        ]
+      }
+    ],
+    "messages": [
+      {
+        "posted_by": "BUYER",
+        "time": "2026-10-29T10:15:00Z",
+        "content": "I ordered these headphones over a week ago and never received the package."
+      }
+    ]
+  },
+  {
+    "dispute_id": "PP-D-1002",
+    "create_time": "2026-11-02T14:30:00Z",
+    "update_time": "2026-11-02T14:30:00Z",
+    "dispute_amount": {
+      "currency_code": "USD",
+      "value": "599.00"
+    },
+    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "dispute_state": "REQUIRED_ACTION",
+    "dispute_lifecycle_stage": "INQUIRY",
+    "dispute_channel": "INTERNAL",
+    "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+    "seller_response_due_date": "2026-11-12T18:00:00Z",
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "REPLACE_WITH_TXN_ID_2",
+        "buyer_transaction_id": "BUYER_TXN_1002",
+        "transaction_status": "COMPLETED",
+        "gross_amount": {
+          "currency_code": "USD",
+          "value": "599.00"
+        },
+        "buyer": {
+          "name": "David Miller"
+        },
+        "seller_protection_eligible": true,
+        "items": [
+          {
+            "item_name": "Apple iPad Air 11-inch M2 (128GB, Space Gray)",
+            "item_description": "Brand new sealed iPad Air 11-inch Wi-Fi model",
+            "item_price": {
+              "currency_code": "USD",
+              "value": "599.00"
+            },
+            "item_quantity": "1"
+          }
+        ]
+      }
+    ],
+    "messages": [
+      {
+        "posted_by": "BUYER",
+        "time": "2026-11-02T14:30:00Z",
+        "content": "Claiming item not received. Was expecting it days ago."
+      }
+    ]
+  },
+  {
+    "dispute_id": "PP-D-1003",
+    "create_time": "2026-10-31T09:20:00Z",
+    "update_time": "2026-10-31T09:20:00Z",
+    "dispute_amount": {
+      "currency_code": "USD",
+      "value": "99.99"
+    },
+    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "dispute_state": "REQUIRED_ACTION",
+    "dispute_lifecycle_stage": "INQUIRY",
+    "dispute_channel": "INTERNAL",
+    "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+    "seller_response_due_date": "2026-11-09T14:00:00Z",
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "REPLACE_WITH_TXN_ID_3",
+        "buyer_transaction_id": "BUYER_TXN_1003",
+        "transaction_status": "COMPLETED",
+        "gross_amount": {
+          "currency_code": "USD",
+          "value": "99.99"
+        },
+        "buyer": {
+          "name": "Elena Rostova"
+        },
+        "seller_protection_eligible": true,
+        "items": [
+          {
+            "item_name": "Logitech MX Master 3S Wireless Mouse",
+            "item_description": "Ergonomic quiet performance mouse, Graphite",
+            "item_price": {
+              "currency_code": "USD",
+              "value": "99.99"
+            },
+            "item_quantity": "1"
+          }
+        ]
+      }
+    ],
+    "messages": [
+      {
+        "posted_by": "BUYER",
+        "time": "2026-10-31T09:20:00Z",
+        "content": "Tracking claims delivered to porch, but nothing arrived. No signature obtained."
+      }
+    ]
+  },
+  {
+    "dispute_id": "PP-D-1004",
+    "create_time": "2026-11-02T08:15:00Z",
+    "update_time": "2026-11-02T08:15:00Z",
+    "dispute_amount": {
+      "currency_code": "USD",
+      "value": "28.50"
+    },
+    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "dispute_state": "REQUIRED_ACTION",
+    "dispute_lifecycle_stage": "CLAIM",
+    "dispute_channel": "INTERNAL",
+    "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+    "seller_response_due_date": "2026-11-08T08:00:00Z",
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "REPLACE_WITH_TXN_ID_4",
+        "buyer_transaction_id": "BUYER_TXN_1004",
+        "transaction_status": "COMPLETED",
+        "gross_amount": {
+          "currency_code": "USD",
+          "value": "28.50"
+        },
+        "buyer": {
+          "name": "Marcus Vance"
+        },
+        "seller_protection_eligible": false,
+        "items": [
+          {
+            "item_name": "Handmade Vintage Leather Keyring",
+            "item_description": "Custom embossed monogram leather keychain",
+            "item_price": {
+              "currency_code": "USD",
+              "value": "28.50"
+            },
+            "item_quantity": "1"
+          }
+        ]
+      }
+    ],
+    "messages": [
+      {
+        "posted_by": "BUYER",
+        "time": "2026-11-02T08:15:00Z",
+        "content": "Never received item, no tracking was provided by seller."
+      }
+    ]
+  },
+  {
+    "dispute_id": "PP-D-1005",
+    "create_time": "2026-10-28T11:45:00Z",
+    "update_time": "2026-10-28T11:45:00Z",
+    "dispute_amount": {
+      "currency_code": "USD",
+      "value": "145.00"
+    },
+    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "dispute_state": "REQUIRED_ACTION",
+    "dispute_lifecycle_stage": "INQUIRY",
+    "dispute_channel": "INTERNAL",
+    "reason": "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED",
+    "seller_response_due_date": "2026-11-11T12:00:00Z",
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "REPLACE_WITH_TXN_ID_5",
+        "buyer_transaction_id": "BUYER_TXN_1005",
+        "transaction_status": "COMPLETED",
+        "gross_amount": {
+          "currency_code": "USD",
+          "value": "145.00"
+        },
+        "buyer": {
+          "name": "Chloe Martin"
+        },
+        "seller_protection_eligible": true,
+        "items": [
+          {
+            "item_name": "Vintage Mechanical Keyboard (Used - Good)",
+            "item_description": "Refurbished Model M Style Keyboard, PS/2 connector with USB adapter included, beige with vintage keycaps",
+            "item_price": {
+              "currency_code": "USD",
+              "value": "145.00"
+            },
+            "item_quantity": "1"
+          }
+        ]
+      }
+    ],
+    "messages": [
+      {
+        "posted_by": "BUYER",
+        "time": "2026-10-28T11:45:00Z",
+        "content": "The keyboard I received is an old vintage model from the 90s, not a modern gaming keyboard."
+      }
+    ]
+  },
+  {
+    "dispute_id": "PP-D-1006",
+    "create_time": "2026-10-26T14:10:00Z",
+    "update_time": "2026-10-26T14:10:00Z",
+    "dispute_amount": {
+      "currency_code": "USD",
+      "value": "219.00"
+    },
+    "status": "WAITING_FOR_SELLER_RESPONSE",
+    "dispute_state": "REQUIRED_ACTION",
+    "dispute_lifecycle_stage": "INQUIRY",
+    "dispute_channel": "INTERNAL",
+    "reason": "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED",
+    "seller_response_due_date": "2026-11-14T20:00:00Z",
+    "disputed_transactions": [
+      {
+        "seller_transaction_id": "REPLACE_WITH_TXN_ID_6",
+        "buyer_transaction_id": "BUYER_TXN_1006",
+        "transaction_status": "COMPLETED",
+        "gross_amount": {
+          "currency_code": "USD",
+          "value": "219.00"
+        },
+        "buyer": {
+          "name": "Liam O'Connor"
+        },
+        "seller_protection_eligible": true,
+        "items": [
+          {
+            "item_name": "Ceramic Cookware 10-Piece Set",
+            "item_description": "Non-stick ceramic pots and pans set in Forest Green",
+            "item_price": {
+              "currency_code": "USD",
+              "value": "219.00"
+            },
+            "item_quantity": "1"
+          }
+        ]
+      }
+    ],
+    "messages": [
+      {
+        "posted_by": "BUYER",
+        "time": "2026-10-26T14:10:00Z",
+        "content": "Item arrived with cosmetic scratch on lid rim. Demanding a full refund for the entire set."
+      }
+    ]
+  }
+]

@@ -1,0 +1,360 @@
+[
+  {
+    "orderId": "ORD-1001",
+    "paypalTransactionId": "REPLACE_WITH_TXN_ID_1",
+    "customerName": "Sarah Jenkins",
+    "items": [
+      {
+        "name": "Sony WH-1000XM5 Wireless Headphones",
+        "description": "Premium noise cancelling over-ear headphones, Black",
+        "price": 349.99
+      }
+    ],
+    "amount": 349.99,
+    "currency": "USD",
+    "shippingAddress": {
+      "recipientName": "Sarah Jenkins",
+      "line1": "742 Evergreen Terrace",
+      "city": "Springfield",
+      "state": "OR",
+      "postalCode": "97477",
+      "countryCode": "US"
+    },
+    "billingAddress": {
+      "recipientName": "Sarah Jenkins",
+      "line1": "742 Evergreen Terrace",
+      "city": "Springfield",
+      "state": "OR",
+      "postalCode": "97477",
+      "countryCode": "US"
+    },
+    "orderedAt": "2026-10-25T14:30:00Z",
+    "carrier": "UPS",
+    "trackingNumber": "1Z9999999999999991",
+    "trackingEvents": [
+      {
+        "time": "2026-10-26T09:00:00Z",
+        "status": "PICKED_UP",
+        "location": "Portland, OR"
+      },
+      {
+        "time": "2026-10-27T11:15:00Z",
+        "status": "OUT_FOR_DELIVERY",
+        "location": "Springfield, OR"
+      },
+      {
+        "time": "2026-10-27T14:45:00Z",
+        "status": "DELIVERED",
+        "location": "Springfield, OR",
+        "signedBy": "S. Jenkins"
+      }
+    ],
+    "refunds": [],
+    "customerMessages": [
+      {
+        "time": "2026-10-28T16:00:00Z",
+        "from": "customer",
+        "text": "Hi, I have not received the package yet, please advise."
+      },
+      {
+        "time": "2026-10-28T17:15:00Z",
+        "from": "merchant",
+        "text": "Hello Sarah, UPS tracking indicates delivered on Oct 27 at 2:45pm signed by S. Jenkins. Please check with your household."
+      }
+    ],
+    "listingDescription": "Brand new authentic Sony WH-1000XM5 Noise Cancelling Headphones in factory sealed box with 1-year manufacturer warranty.",
+    "returnPolicyText": "30-day return policy for unopened items. Buyer pays return shipping. All serial numbers verified prior to shipment."
+  },
+  {
+    "orderId": "ORD-1002",
+    "paypalTransactionId": "REPLACE_WITH_TXN_ID_2",
+    "customerName": "David Miller",
+    "items": [
+      {
+        "name": "Apple iPad Air 11-inch M2 (128GB, Space Gray)",
+        "description": "Brand new sealed iPad Air 11-inch Wi-Fi model",
+        "price": 599.00
+      }
+    ],
+    "amount": 599.00,
+    "currency": "USD",
+    "shippingAddress": {
+      "recipientName": "David Miller",
+      "line1": "1200 Grand Avenue, Apt 4B",
+      "city": "Chicago",
+      "state": "IL",
+      "postalCode": "60611",
+      "countryCode": "US"
+    },
+    "billingAddress": {
+      "recipientName": "David Miller",
+      "line1": "1200 Grand Avenue, Apt 4B",
+      "city": "Chicago",
+      "state": "IL",
+      "postalCode": "60611",
+      "countryCode": "US"
+    },
+    "orderedAt": "2026-10-28T10:00:00Z",
+    "carrier": "FEDEX",
+    "trackingNumber": "794829103847",
+    "trackingEvents": [
+      {
+        "time": "2026-10-29T08:00:00Z",
+        "status": "PICKED_UP",
+        "location": "Indianapolis, IN"
+      },
+      {
+        "time": "2026-10-30T10:30:00Z",
+        "status": "OUT_FOR_DELIVERY",
+        "location": "Chicago, IL"
+      },
+      {
+        "time": "2026-10-30T13:20:00Z",
+        "status": "DELIVERED",
+        "location": "Chicago, IL",
+        "signedBy": "D. Miller"
+      }
+    ],
+    "refunds": [],
+    "customerMessages": [],
+    "listingDescription": "Authentic Apple iPad Air 11-inch M2 chip, 128GB Space Gray, brand new sealed with official Apple packaging.",
+    "returnPolicyText": "14-day return window. Item must be in original sealed condition and packaging. Restocking fee may apply if opened."
+  },
+  {
+    "orderId": "ORD-1003",
+    "paypalTransactionId": "REPLACE_WITH_TXN_ID_3",
+    "customerName": "Elena Rostova",
+    "items": [
+      {
+        "name": "Logitech MX Master 3S Wireless Mouse",
+        "description": "Ergonomic quiet performance mouse, Graphite",
+        "price": 99.99
+      }
+    ],
+    "amount": 99.99,
+    "currency": "USD",
+    "shippingAddress": {
+      "recipientName": "Elena Rostova",
+      "line1": "450 Beacon Street",
+      "city": "Boston",
+      "state": "MA",
+      "postalCode": "02115",
+      "countryCode": "US"
+    },
+    "billingAddress": {
+      "recipientName": "Elena Rostova",
+      "line1": "450 Beacon Street",
+      "city": "Boston",
+      "state": "MA",
+      "postalCode": "02115",
+      "countryCode": "US"
+    },
+    "orderedAt": "2026-10-26T16:20:00Z",
+    "carrier": "USPS",
+    "trackingNumber": "9400111899223100000001",
+    "trackingEvents": [
+      {
+        "time": "2026-10-27T10:00:00Z",
+        "status": "PICKED_UP",
+        "location": "Boston, MA"
+      },
+      {
+        "time": "2026-10-29T12:00:00Z",
+        "status": "OUT_FOR_DELIVERY",
+        "location": "Boston, MA"
+      },
+      {
+        "time": "2026-10-29T15:10:00Z",
+        "status": "DELIVERED",
+        "location": "Boston, MA"
+      }
+    ],
+    "refunds": [],
+    "customerMessages": [
+      {
+        "time": "2026-10-30T09:00:00Z",
+        "from": "customer",
+        "text": "Package says delivered on porch but I was not home and didn't find anything."
+      }
+    ],
+    "listingDescription": "Logitech MX Master 3S Wireless Performance Mouse, 8K DPI sensor, Quiet Clicks, Bluetooth & Logi Bolt USB receiver included.",
+    "returnPolicyText": "30-day money-back guarantee. Contact support for assistance with lost parcels."
+  },
+  {
+    "orderId": "ORD-1004",
+    "paypalTransactionId": "REPLACE_WITH_TXN_ID_4",
+    "customerName": "Marcus Vance",
+    "items": [
+      {
+        "name": "Handmade Vintage Leather Keyring",
+        "description": "Custom embossed monogram leather keychain",
+        "price": 28.50
+      }
+    ],
+    "amount": 28.50,
+    "currency": "USD",
+    "shippingAddress": {
+      "recipientName": "Marcus Vance",
+      "line1": "88 Pine Needle Way",
+      "city": "Denver",
+      "state": "CO",
+      "postalCode": "80202",
+      "countryCode": "US"
+    },
+    "billingAddress": {
+      "recipientName": "Marcus Vance",
+      "line1": "88 Pine Needle Way",
+      "city": "Denver",
+      "state": "CO",
+      "postalCode": "80202",
+      "countryCode": "US"
+    },
+    "orderedAt": "2026-10-20T11:00:00Z",
+    "carrier": null,
+    "trackingNumber": null,
+    "trackingEvents": [],
+    "refunds": [],
+    "customerMessages": [
+      {
+        "time": "2026-11-01T14:00:00Z",
+        "from": "customer",
+        "text": "Where is my keychain? It has been over 10 days and no tracking number was given."
+      }
+    ],
+    "listingDescription": "Handcrafted full-grain leather keychain with brass hardware. Sent via standard untracked lettermail economy shipping.",
+    "returnPolicyText": "Custom engraved items are final sale unless damaged during transit."
+  },
+  {
+    "orderId": "ORD-1005",
+    "paypalTransactionId": "REPLACE_WITH_TXN_ID_5",
+    "customerName": "Chloe Martin",
+    "items": [
+      {
+        "name": "Vintage Mechanical Keyboard (Used - Good)",
+        "description": "Refurbished Model M Style Keyboard, PS/2 connector with USB adapter included, beige with vintage keycaps",
+        "price": 145.00
+      }
+    ],
+    "amount": 145.00,
+    "currency": "USD",
+    "shippingAddress": {
+      "recipientName": "Chloe Martin",
+      "line1": "522 West End Ave",
+      "city": "New York",
+      "state": "NY",
+      "postalCode": "10024",
+      "countryCode": "US"
+    },
+    "billingAddress": {
+      "recipientName": "Chloe Martin",
+      "line1": "522 West End Ave",
+      "city": "New York",
+      "state": "NY",
+      "postalCode": "10024",
+      "countryCode": "US"
+    },
+    "orderedAt": "2026-10-22T15:30:00Z",
+    "carrier": "UPS",
+    "trackingNumber": "1Z9999999999999995",
+    "trackingEvents": [
+      {
+        "time": "2026-10-23T11:00:00Z",
+        "status": "PICKED_UP",
+        "location": "Jersey City, NJ"
+      },
+      {
+        "time": "2026-10-25T14:00:00Z",
+        "status": "DELIVERED",
+        "location": "New York, NY",
+        "signedBy": "C. Martin"
+      }
+    ],
+    "refunds": [],
+    "customerMessages": [
+      {
+        "time": "2026-10-26T18:00:00Z",
+        "from": "customer",
+        "text": "This keyboard looks vintage and old, not like a modern backlit gaming keyboard!"
+      },
+      {
+        "time": "2026-10-27T09:30:00Z",
+        "from": "merchant",
+        "text": "Hi Chloe, the listing clearly specified 'Vintage Mechanical Keyboard (Used - Good) PS/2 Beige' with full high-res photos of the vintage casing."
+      }
+    ],
+    "listingDescription": "Authentic Vintage 1993 clicky mechanical keyboard in Good condition. PS/2 interface (USB adapter included). Classic beige aesthetic, authentic buckling springs. Note: This is an authentic 1990s retro keyboard, NOT a modern RGB gaming board. Please review photos carefully.",
+    "returnPolicyText": "Returns accepted within 14 days if buyer pays return shipping. Item must match serial number and photo records."
+  },
+  {
+    "orderId": "ORD-1006",
+    "paypalTransactionId": "REPLACE_WITH_TXN_ID_6",
+    "customerName": "Liam O'Connor",
+    "items": [
+      {
+        "name": "Ceramic Cookware 10-Piece Set",
+        "description": "Non-stick ceramic pots and pans set in Forest Green",
+        "price": 219.00
+      }
+    ],
+    "amount": 219.00,
+    "currency": "USD",
+    "shippingAddress": {
+      "recipientName": "Liam O'Connor",
+      "line1": "310 Magnolia Lane",
+      "city": "Austin",
+      "state": "TX",
+      "postalCode": "78701",
+      "countryCode": "US"
+    },
+    "billingAddress": {
+      "recipientName": "Liam O'Connor",
+      "line1": "310 Magnolia Lane",
+      "city": "Austin",
+      "state": "TX",
+      "postalCode": "78701",
+      "countryCode": "US"
+    },
+    "orderedAt": "2026-10-18T12:00:00Z",
+    "carrier": "FEDEX",
+    "trackingNumber": "794829103899",
+    "trackingEvents": [
+      {
+        "time": "2026-10-19T08:00:00Z",
+        "status": "PICKED_UP",
+        "location": "Dallas, TX"
+      },
+      {
+        "time": "2026-10-21T13:45:00Z",
+        "status": "DELIVERED",
+        "location": "Austin, TX",
+        "signedBy": "L. O'Connor"
+      }
+    ],
+    "refunds": [
+      {
+        "amount": 50.00,
+        "date": "2026-10-24T16:00:00Z",
+        "reason": "Goodwill discount for minor cosmetic scratch on skillet handle"
+      }
+    ],
+    "customerMessages": [
+      {
+        "time": "2026-10-23T11:00:00Z",
+        "from": "customer",
+        "text": "One of the small lids has a tiny scratch on the rim."
+      },
+      {
+        "time": "2026-10-24T15:30:00Z",
+        "from": "merchant",
+        "text": "We're sorry about that! We have processed a $50 goodwill refund to compensate for the lid."
+      },
+      {
+        "time": "2026-10-24T16:05:00Z",
+        "from": "customer",
+        "text": "Received $50, thank you."
+      }
+    ],
+    "listingDescription": "Complete 10-piece eco-friendly non-stick ceramic cookware set. Includes saucepans, stockpot, fry pans, and glass lids.",
+    "returnPolicyText": "30-day money-back guarantee. If partial compensation was already granted, remaining claim amount must reflect the prior adjustment."
+  }
+]
