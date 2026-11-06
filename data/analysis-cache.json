@@ -1,0 +1,74 @@
+{
+  "PP-D-AI-TEST-1": {
+    "disputeId": "PP-D-AI-TEST-1",
+    "summary": "Strong defense: All fulfillment and signature criteria verified. Recommended strategy: FIGHT.",
+    "recommendation": "fight",
+    "draftNotes": "Formal Merchant Defense Response for Dispute PP-D-AI-TEST-1 [F1] regarding MERCHANDISE_OR_SERVICE_NOT_RECEIVED [F2].\n\nThe order was fulfilled and shipped by the seller. Carrier tracking confirms shipment [F3] and successful delivery to the recipient address [F4]. Direct physical signature was captured upon delivery [F5]. The delivery address matches the buyer transaction details. We respectfully request this dispute be closed under Seller Protection.",
+    "citedFactIds": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5"
+    ],
+    "generatedAt": "2026-11-06T19:50:38.824Z",
+    "needsReview": false
+  },
+  "PP-D-CACHE-TEST": {
+    "disputeId": "PP-D-CACHE-TEST",
+    "summary": "Cached analysis summary",
+    "recommendation": "fight",
+    "draftNotes": "Evidence notes citing [F1]",
+    "citedFactIds": [
+      "F1"
+    ],
+    "generatedAt": "2026-11-06T19:50:38.830Z",
+    "needsReview": false
+  },
+  "PP-D-WEAK-TEST": {
+    "disputeId": "PP-D-WEAK-TEST",
+    "summary": "Weak defense: Untracked shipment Recommended strategy: ACCEPT.",
+    "recommendation": "accept",
+    "draftNotes": "Formal Merchant Defense Response for Dispute PP-D-WEAK-TEST [F1] regarding MERCHANDISE_OR_SERVICE_NOT_RECEIVED [F2].\n\nThe order was fulfilled and shipped by the seller. Carrier tracking confirms shipment [F3] and successful delivery to the recipient address [F4]. Direct physical signature was captured upon delivery [F5]. The delivery address matches the buyer transaction details. We respectfully request this dispute be closed under Seller Protection.",
+    "citedFactIds": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5"
+    ],
+    "generatedAt": "2026-11-06T19:50:38.843Z",
+    "needsReview": false
+  },
+  "PP-D-MED-TEST": {
+    "disputeId": "PP-D-MED-TEST",
+    "summary": "Medium defense: Delivered without signature Recommended strategy: PARTIAL_OFFER.",
+    "recommendation": "partial_offer",
+    "recommendedOfferAmount": 140,
+    "draftNotes": "Formal Merchant Defense Response for Dispute PP-D-MED-TEST [F1] regarding MERCHANDISE_OR_SERVICE_NOT_RECEIVED [F2].\n\nThe order was fulfilled and shipped by the seller. Carrier tracking confirms shipment [F3] and successful delivery to the recipient address [F4]. Direct physical signature was captured upon delivery [F5]. The delivery address matches the buyer transaction details. We respectfully request this dispute be closed under Seller Protection.",
+    "citedFactIds": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5"
+    ],
+    "generatedAt": "2026-11-06T19:50:38.851Z",
+    "needsReview": false
+  },
+  "PP-D-1001": {
+    "disputeId": "PP-D-1001",
+    "summary": "Item Not Received claim assessed at 100/100 (STRONG defense strength). Recommended strategy: FIGHT.",
+    "recommendation": "fight",
+    "draftNotes": "Formal Merchant Defense Response for Dispute PP-D-1001 [F1] regarding MERCHANDISE_OR_SERVICE_NOT_RECEIVED [F2].\n\nThe order was fulfilled and shipped by the seller. Carrier tracking confirms shipment [F15] and successful delivery to the recipient address [F16]. Direct physical signature was captured upon delivery [F17]. The delivery address matches the buyer transaction details. We respectfully request this dispute be closed under Seller Protection.",
+    "citedFactIds": [
+      "F1",
+      "F2",
+      "F15",
+      "F16",
+      "F17"
+    ],
+    "generatedAt": "2026-11-06T19:50:25.797Z",
+    "needsReview": false
+  }
+}

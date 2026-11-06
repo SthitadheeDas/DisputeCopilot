@@ -1,4 +1,4 @@
-import { EnrichedDispute, HealthResponse, ActivityLogEntry } from './types';
+import { EnrichedDispute, HealthResponse, ActivityLogEntry, CachedAIAnalysis } from './types';
 
 const API_BASE = '/api';
 
@@ -22,6 +22,22 @@ export async function fetchDisputes(): Promise<{
 export async function fetchDispute(id: string): Promise<EnrichedDispute> {
   const res = await fetch(`${API_BASE}/disputes/${id}`);
   if (!res.ok) throw new Error(`Failed to load dispute ${id} (${res.status})`);
+  return res.json();
+}
+
+export async function analyzeDispute(id: string): Promise<{
+  success: boolean;
+  disputeId: string;
+  analysis: CachedAIAnalysis;
+}> {
+  const res = await fetch(`${API_BASE}/disputes/${id}/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Failed to generate AI analysis (${res.status})`);
+  }
   return res.json();
 }
 

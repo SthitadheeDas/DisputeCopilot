@@ -1,0 +1,37 @@
+[
+  {
+    "id": "act_1793994625820_32gss",
+    "timestamp": "2026-11-06T19:50:25.820Z",
+    "disputeId": "PP-D-1001",
+    "action": "submit-evidence",
+    "status": "success",
+    "dryRun": true,
+    "payload": {
+      "evidences": [
+        {
+          "evidence_type": "OTHER",
+          "notes": "Merchant formal defense notes with tracking proof [F3]."
+        }
+      ]
+    }
+  },
+  {
+    "id": "act_1793993733513_z2l8b",
+    "timestamp": "2026-11-06T19:35:33.513Z",
+    "disputeId": "PP-D-1004",
+    "action": "submit-evidence",
+    "status": "success",
+    "dryRun": true,
+    "payload": {
+      "evidences": [
+        {
+          "evidence_type": "OTHER",
+          "notes": "Formal Merchant Evidence Response for Dispute PP-D-1004 [F1].\n\nThe merchant shipped the ordered goods to the customer. We are providing available order fulfillment records and customer communication history to resolve this inquiry."
+        }
+      ]
+    },
+    "response": {
+      "message": "Dry run: payload validated and logged"
+    }
+  }
+]

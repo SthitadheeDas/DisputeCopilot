@@ -2,18 +2,41 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { CONFIG } from '../config.js';
 import { loadFixtureDisputes, findFixtureDisputeById } from '../store/fixtures.js';
-import { findOrderByTransactionId } from '../store/store.js';
+import { findOrderByTransactionId, loadStoreOrders } from '../store/store.js';
 import { buildEvidencePack, scoreDispute } from '../scoring/index.js';
 import { getCachedAnalysis } from '../store/cache.js';
 import { getActivityLog, logActivity } from '../store/activity.js';
-import { PayPalDispute } from '../types/dispute.js';
+import {
+  fetchLiveDisputes,
+  fetchLiveDisputeDetails,
+  submitPayPalEvidence,
+  acceptPayPalClaim,
+  makePayPalOffer,
+} from '../paypal/index.js';
+import { analyzeDisputeWithGemini } from '../ai/index.js';
+import { PayPalDispute, StoreOrder } from '../types/dispute.js';
 
 const router = Router();
 
 // Helper to assemble dispute with order, evidence, score, and deadline calculations
 function enrichDispute(dispute: PayPalDispute) {
   const txnId = dispute.disputed_transactions?.[0]?.seller_transaction_id || '';
-  const order = findOrderByTransactionId(txnId);
+  let order: StoreOrder | null = findOrderByTransactionId(txnId);
+
+  // Fallback match: if txnId is placeholder or unmatched, match by customer name or amount
+  if (!order) {
+    const buyerName = dispute.disputed_transactions?.[0]?.buyer?.name;
+    const amountVal = parseFloat(dispute.dispute_amount?.value || '0');
+    const allOrders = loadStoreOrders();
+
+    order =
+      allOrders.find(
+        (o) =>
+          (buyerName && o.customerName.toLowerCase() === buyerName.toLowerCase()) ||
+          Math.abs(o.amount - amountVal) < 0.01
+      ) || null;
+  }
+
   const evidencePack = buildEvidencePack(dispute, order);
   const score = scoreDispute(dispute, order);
 
@@ -32,22 +55,34 @@ function enrichDispute(dispute: PayPalDispute) {
   };
 }
 
-// GET /api/disputes - list all disputes sorted by seller response deadline
-router.get('/disputes', (_req, res) => {
+// GET /api/disputes - list disputes sorted by deadline
+router.get('/disputes', async (_req, res) => {
   try {
     let disputes: PayPalDispute[] = [];
+    let dataSourceUsed: 'sandbox' | 'fixture' = CONFIG.dataMode;
+    let liveError: string | null = null;
 
-    if (CONFIG.dataMode === 'fixture') {
-      disputes = loadFixtureDisputes();
+    if (CONFIG.dataMode === 'sandbox') {
+      try {
+        disputes = await fetchLiveDisputes();
+        if (disputes.length === 0) {
+          // If sandbox has 0 disputes, provide fixtures as backup
+          console.log('[PayPal] Live sandbox has 0 active disputes. Augmenting with fixture disputes.');
+          disputes = loadFixtureDisputes();
+        }
+      } catch (err: unknown) {
+        liveError = err instanceof Error ? err.message : 'Failed to reach PayPal Sandbox';
+        console.warn(`[PayPal] Live fetch failed (${liveError}). Falling back to fixtures.`);
+        disputes = loadFixtureDisputes();
+        dataSourceUsed = 'fixture';
+      }
     } else {
-      // In sandbox mode (Phase 2), will call PayPal Sandbox API
-      // For now, falls back gracefully to fixtures if not yet wired
       disputes = loadFixtureDisputes();
     }
 
     const enriched = disputes.map(enrichDispute);
 
-    // Sort by response due date ascending (soonest deadline first)
+    // Sort by seller response due date ascending (closest deadline first)
     enriched.sort((a, b) => {
       const dateA = new Date(a.seller_response_due_date).getTime();
       const dateB = new Date(b.seller_response_due_date).getTime();
@@ -55,9 +90,11 @@ router.get('/disputes', (_req, res) => {
     });
 
     res.json({
-      dataMode: CONFIG.dataMode,
+      dataMode: dataSourceUsed,
+      configuredMode: CONFIG.dataMode,
       dryRun: CONFIG.dryRun,
       total: enriched.length,
+      warning: liveError,
       disputes: enriched,
     });
   } catch (err: unknown) {
@@ -67,14 +104,19 @@ router.get('/disputes', (_req, res) => {
   }
 });
 
-// GET /api/disputes/:id - get single dispute with full evidence, score and AI draft
-router.get('/disputes/:id', (req, res) => {
+// GET /api/disputes/:id - get single dispute details
+router.get('/disputes/:id', async (req, res) => {
   try {
     const { id } = req.params;
     let dispute: PayPalDispute | null = null;
 
-    if (CONFIG.dataMode === 'fixture') {
-      dispute = findFixtureDisputeById(id);
+    if (CONFIG.dataMode === 'sandbox') {
+      try {
+        dispute = await fetchLiveDisputeDetails(id);
+      } catch (err) {
+        console.warn(`[PayPal] Could not fetch live dispute ${id}, trying fixtures:`, err);
+        dispute = findFixtureDisputeById(id);
+      }
     } else {
       dispute = findFixtureDisputeById(id);
     }
@@ -93,7 +135,48 @@ router.get('/disputes/:id', (req, res) => {
   }
 });
 
-// Input validation schemas using zod
+// POST /api/disputes/:id/analyze - run or refresh Gemini AI analysis
+router.post('/disputes/:id/analyze', async (req, res) => {
+  try {
+    const { id } = req.params;
+    let dispute: PayPalDispute | null = null;
+
+    if (CONFIG.dataMode === 'sandbox') {
+      try {
+        dispute = await fetchLiveDisputeDetails(id);
+      } catch {
+        dispute = findFixtureDisputeById(id);
+      }
+    } else {
+      dispute = findFixtureDisputeById(id);
+    }
+
+    if (!dispute) {
+      res.status(404).json({ error: `Dispute with ID ${id} not found` });
+      return;
+    }
+
+    const enriched = enrichDispute(dispute);
+    const analysis = await analyzeDisputeWithGemini(
+      dispute,
+      enriched.evidencePack,
+      enriched.score,
+      true // force refresh
+    );
+
+    res.json({
+      success: true,
+      disputeId: id,
+      analysis,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`Error analyzing dispute ${req.params.id} with Gemini:`, err);
+    res.status(500).json({ error: 'Failed to generate AI analysis', details: message });
+  }
+});
+
+// Zod schemas for merchant actions
 const submitEvidenceSchema = z.object({
   notes: z.string().min(5, 'Notes must be at least 5 characters long'),
 });
@@ -104,7 +187,7 @@ const offerSchema = z.object({
 });
 
 // POST /api/disputes/:id/submit-evidence
-router.post('/disputes/:id/submit-evidence', (req, res) => {
+router.post('/disputes/:id/submit-evidence', async (req, res) => {
   const { id } = req.params;
   const parsed = submitEvidenceSchema.safeParse(req.body);
 
@@ -116,66 +199,79 @@ router.post('/disputes/:id/submit-evidence', (req, res) => {
     return;
   }
 
-  const payload = {
-    evidences: [
-      {
-        evidence_type: 'OTHER',
-        notes: parsed.data.notes,
-      },
-    ],
-  };
+  try {
+    const result = await submitPayPalEvidence(id, parsed.data.notes);
 
-  const log = logActivity({
-    disputeId: id,
-    action: 'submit-evidence',
-    status: 'success',
-    dryRun: CONFIG.dryRun,
-    payload,
-    response: { message: CONFIG.dryRun ? 'Dry run: payload validated and logged' : 'Evidence submitted' },
-  });
+    const log = logActivity({
+      disputeId: id,
+      action: 'submit-evidence',
+      status: result.success ? 'success' : 'failed',
+      dryRun: result.dryRun,
+      payload: result.submittedPayload,
+      response: result.response,
+    });
 
-  res.json({
-    success: true,
-    dryRun: CONFIG.dryRun,
-    disputeId: id,
-    activityId: log.id,
-    message: CONFIG.dryRun
-      ? 'DRY_RUN mode enabled: Evidence payload previewed and logged without external submission.'
-      : 'Evidence successfully submitted to PayPal.',
-    submittedPayload: payload,
-  });
+    res.json({
+      success: result.success,
+      dryRun: result.dryRun,
+      disputeId: id,
+      activityId: log.id,
+      message: result.message,
+      submittedPayload: result.submittedPayload,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Evidence submission failed';
+    logActivity({
+      disputeId: id,
+      action: 'submit-evidence',
+      status: 'failed',
+      dryRun: CONFIG.dryRun,
+      error: message,
+    });
+    res.status(500).json({ error: 'Evidence submission failed', details: message });
+  }
 });
 
 // POST /api/disputes/:id/accept
-router.post('/disputes/:id/accept', (req, res) => {
+router.post('/disputes/:id/accept', async (req, res) => {
   const { id } = req.params;
+  const note = req.body?.note || 'Merchant accepted customer claim.';
 
-  const payload = {
-    note: req.body?.note || 'Merchant accepted customer claim.',
-  };
+  try {
+    const result = await acceptPayPalClaim(id, note);
 
-  const log = logActivity({
-    disputeId: id,
-    action: 'accept',
-    status: 'success',
-    dryRun: CONFIG.dryRun,
-    payload,
-    response: { message: CONFIG.dryRun ? 'Dry run: accept claim validated' : 'Claim accepted' },
-  });
+    const log = logActivity({
+      disputeId: id,
+      action: 'accept',
+      status: result.success ? 'success' : 'failed',
+      dryRun: result.dryRun,
+      payload: result.submittedPayload,
+      response: result.response,
+    });
 
-  res.json({
-    success: true,
-    dryRun: CONFIG.dryRun,
-    disputeId: id,
-    activityId: log.id,
-    message: CONFIG.dryRun
-      ? 'DRY_RUN mode enabled: Accept action previewed and logged without external submission.'
-      : 'Claim accepted.',
-  });
+    res.json({
+      success: result.success,
+      dryRun: result.dryRun,
+      disputeId: id,
+      activityId: log.id,
+      message: result.message,
+      submittedPayload: result.submittedPayload,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Accept claim failed';
+    logActivity({
+      disputeId: id,
+      action: 'accept',
+      status: 'failed',
+      dryRun: CONFIG.dryRun,
+      error: message,
+    });
+    res.status(500).json({ error: 'Accept claim failed', details: message });
+  }
 });
 
 // POST /api/disputes/:id/offer
-router.post('/disputes/:id/offer', (req, res) => {
+router.post('/disputes/:id/offer', async (req, res) => {
   const { id } = req.params;
   const parsed = offerSchema.safeParse(req.body);
 
@@ -187,34 +283,37 @@ router.post('/disputes/:id/offer', (req, res) => {
     return;
   }
 
-  const payload = {
-    offer_type: 'REFUND',
-    offer_amount: {
-      currency_code: 'USD',
-      value: parsed.data.amount.toFixed(2),
-    },
-    note: parsed.data.note || 'Settlement offer proposed by merchant',
-  };
+  try {
+    const result = await makePayPalOffer(id, parsed.data.amount, parsed.data.note);
 
-  const log = logActivity({
-    disputeId: id,
-    action: 'offer',
-    status: 'success',
-    dryRun: CONFIG.dryRun,
-    payload,
-    response: { message: CONFIG.dryRun ? 'Dry run: offer validated' : 'Offer submitted' },
-  });
+    const log = logActivity({
+      disputeId: id,
+      action: 'offer',
+      status: result.success ? 'success' : 'failed',
+      dryRun: result.dryRun,
+      payload: result.submittedPayload,
+      response: result.response,
+    });
 
-  res.json({
-    success: true,
-    dryRun: CONFIG.dryRun,
-    disputeId: id,
-    activityId: log.id,
-    message: CONFIG.dryRun
-      ? 'DRY_RUN mode enabled: Settlement offer previewed and logged without external submission.'
-      : 'Offer submitted to customer.',
-    submittedPayload: payload,
-  });
+    res.json({
+      success: result.success,
+      dryRun: result.dryRun,
+      disputeId: id,
+      activityId: log.id,
+      message: result.message,
+      submittedPayload: result.submittedPayload,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Offer submission failed';
+    logActivity({
+      disputeId: id,
+      action: 'offer',
+      status: 'failed',
+      dryRun: CONFIG.dryRun,
+      error: message,
+    });
+    res.status(500).json({ error: 'Offer submission failed', details: message });
+  }
 });
 
 // GET /api/activity

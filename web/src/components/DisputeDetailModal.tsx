@@ -14,9 +14,12 @@ import {
   RefreshCw,
   Info,
   Zap,
+  Sparkles,
+  Bot,
+  Check,
 } from 'lucide-react';
-import { EnrichedDispute, EvidenceFact } from '../types';
-import { submitEvidence, acceptClaim, makeOffer } from '../api';
+import { EnrichedDispute, EvidenceFact, CachedAIAnalysis } from '../types';
+import { submitEvidence, acceptClaim, makeOffer, analyzeDispute } from '../api';
 
 interface DisputeDetailModalProps {
   dispute: EnrichedDispute;
@@ -31,7 +34,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
   onClose,
   onActionComplete,
 }) => {
-  // Generate initial draft notes referencing available facts
+  // Generate initial grounded draft notes referencing available facts
   const generateInitialDraft = (): { text: string; citedIds: string[] } => {
     const facts = dispute.evidencePack.facts;
     const trackingFact = facts.find((f) => f.label.includes('Tracking'));
@@ -71,24 +74,51 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
   };
 
   const initial = generateInitialDraft();
-  const [draftNotes, setDraftNotes] = useState(
+  const [aiAnalysis, setAiAnalysis] = useState<CachedAIAnalysis | null>(
+    dispute.cachedAnalysis || null
+  );
+  const [draftNotes, setDraftNotes] = useState<string>(
     dispute.cachedAnalysis?.draftNotes || initial.text
   );
-  const [citedFactIds] = useState<string[]>(
+  const [citedFactIds, setCitedFactIds] = useState<string[]>(
     dispute.cachedAnalysis?.citedFactIds || initial.citedIds
   );
 
   // Partial offer state
   const [showOfferInput, setShowOfferInput] = useState(false);
   const [offerAmount, setOfferAmount] = useState(
-    (parseFloat(dispute.dispute_amount.value) * 0.5).toFixed(2)
+    dispute.cachedAnalysis?.recommendedOfferAmount
+      ? dispute.cachedAnalysis.recommendedOfferAmount.toFixed(2)
+      : (parseFloat(dispute.dispute_amount.value) * 0.4).toFixed(2)
   );
 
   // Payload modal state
   const [confirmPayloadModal, setConfirmPayloadModal] = useState<Record<string, unknown> | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // Trigger Gemini AI Analysis
+  const handleTriggerAI = async () => {
+    setAnalyzing(true);
+    setActionError(null);
+    try {
+      const res = await analyzeDispute(dispute.dispute_id);
+      if (res.analysis) {
+        setAiAnalysis(res.analysis);
+        setDraftNotes(res.analysis.draftNotes);
+        setCitedFactIds(res.analysis.citedFactIds);
+        if (res.analysis.recommendedOfferAmount) {
+          setOfferAmount(res.analysis.recommendedOfferAmount.toFixed(2));
+        }
+      }
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : 'AI analysis failed');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const getSourceBadge = (source: EvidenceFact['source']) => {
     switch (source) {
@@ -279,7 +309,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
               )}
 
               {/* Fact cards */}
-              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
                 {dispute.evidencePack.facts.map((fact) => (
                   <div
                     key={fact.id}
@@ -306,7 +336,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
           </div>
 
           {/* RIGHT COLUMN: Scoring & AI Draft (7 cols) */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 space-y-5">
             {/* Deterministic Scoring Engine Breakdown */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
@@ -375,6 +405,97 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
               </div>
             </div>
 
+            {/* AI Analysis & Strategy Section */}
+            <div className="bg-gradient-to-br from-indigo-50/70 to-blue-50/50 border border-indigo-200/80 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="p-1.5 bg-indigo-600 text-white rounded-lg">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                      <span>Gemini AI Strategy Copilot</span>
+                      {aiAnalysis && (
+                        <span className="text-[10px] bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.2 rounded-full">
+                          Structured Output
+                        </span>
+                      )}
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Grounded exclusively on Evidence Pack facts
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleTriggerAI}
+                  disabled={analyzing}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${analyzing ? 'animate-spin' : ''}`} />
+                  <span>{aiAnalysis ? 'Re-analyze with AI' : 'Draft with Gemini'}</span>
+                </button>
+              </div>
+
+              {aiAnalysis ? (
+                <div className="space-y-2 pt-1 text-xs">
+                  {/* Strategy Badge & Citation Check */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 bg-white/80 p-2.5 rounded-xl border border-indigo-100">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-slate-500 font-medium">Strategy:</span>
+                      {aiAnalysis.recommendation === 'fight' && (
+                        <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800 flex items-center space-x-1">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>FIGHT & DEFEND CLAIM</span>
+                        </span>
+                      )}
+                      {aiAnalysis.recommendation === 'partial_offer' && (
+                        <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-800 flex items-center space-x-1">
+                          <DollarSign className="w-3.5 h-3.5" />
+                          <span>
+                            OFFER SETTLEMENT (${aiAnalysis.recommendedOfferAmount?.toFixed(2) || offerAmount})
+                          </span>
+                        </span>
+                      )}
+                      {aiAnalysis.recommendation === 'accept' && (
+                        <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-rose-100 text-rose-800 flex items-center space-x-1">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>CONCEDE & ACCEPT CLAIM</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Citation verification badge */}
+                    <div className="flex items-center space-x-1">
+                      {aiAnalysis.needsReview ? (
+                        <span className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-medium flex items-center space-x-1">
+                          <AlertTriangle className="w-3 h-3 text-amber-600" />
+                          <span>Needs Human Review</span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium flex items-center space-x-1">
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span>All Citations Verified Grounded</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Summary */}
+                  <p className="text-slate-700 leading-relaxed bg-white/50 p-2 rounded-lg border border-indigo-50">
+                    <strong>Summary:</strong> {aiAnalysis.summary}
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-white/60 p-3 rounded-xl border border-indigo-100 text-xs text-slate-600 flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Bot className="w-4 h-4 text-indigo-500" />
+                    <span>Click <strong>Draft with Gemini</strong> to synthesize evidence into a formal defense.</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Editable Response Draft */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -386,8 +507,12 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                     Editable
                   </span>
                 </div>
-                <div className="text-xs text-slate-400">
-                  Cited Facts: {citedFactIds.map((id) => `[${id}]`).join(', ')}
+                <div className="text-xs text-slate-500">
+                  Cited Fact IDs: {citedFactIds.map((id) => (
+                    <span key={id} className="font-mono bg-slate-100 text-blue-700 px-1 py-0.2 rounded ml-1 font-semibold">
+                      [{id}]
+                    </span>
+                  ))}
                 </div>
               </div>
               <p className="text-xs text-slate-500 mb-2">
@@ -396,9 +521,9 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
               <textarea
                 value={draftNotes}
                 onChange={(e) => setDraftNotes(e.target.value)}
-                rows={6}
+                rows={5}
                 disabled={Boolean(actionSuccess)}
-                className="w-full text-xs font-mono p-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-hidden transition-all text-slate-800 leading-relaxed disabled:bg-slate-100 disabled:text-slate-500"
+                className="w-full text-xs font-mono p-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-hidden transition-all text-slate-800 leading-relaxed disabled:bg-slate-100 disabled:text-slate-500 shadow-2xs"
               />
             </div>
 
@@ -411,14 +536,14 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                   </span>
                   <button
                     onClick={() => setShowOfferInput(false)}
-                    className="text-xs text-amber-700 hover:text-amber-900"
+                    className="text-xs text-amber-700 hover:text-amber-900 font-medium"
                   >
                     Cancel
                   </button>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="relative flex-1">
-                    <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-xs text-slate-500">
+                    <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-xs text-slate-500 font-bold">
                       $
                     </span>
                     <input
