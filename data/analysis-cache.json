@@ -11,7 +11,7 @@
       "F4",
       "F5"
     ],
-    "generatedAt": "2026-11-06T19:50:38.824Z",
+    "generatedAt": "2026-11-07T09:28:06.273Z",
     "needsReview": false
   },
   "PP-D-CACHE-TEST": {
@@ -22,7 +22,7 @@
     "citedFactIds": [
       "F1"
     ],
-    "generatedAt": "2026-11-06T19:50:38.830Z",
+    "generatedAt": "2026-11-07T09:28:06.279Z",
     "needsReview": false
   },
   "PP-D-WEAK-TEST": {
@@ -37,7 +37,7 @@
       "F4",
       "F5"
     ],
-    "generatedAt": "2026-11-06T19:50:38.843Z",
+    "generatedAt": "2026-11-07T09:28:06.289Z",
     "needsReview": false
   },
   "PP-D-MED-TEST": {
@@ -53,7 +53,7 @@
       "F4",
       "F5"
     ],
-    "generatedAt": "2026-11-06T19:50:38.851Z",
+    "generatedAt": "2026-11-07T09:28:06.297Z",
     "needsReview": false
   },
   "PP-D-1001": {
@@ -69,6 +69,18 @@
       "F17"
     ],
     "generatedAt": "2026-11-06T19:50:25.797Z",
+    "needsReview": false
+  },
+  "PP-D-1004": {
+    "disputeId": "PP-D-1004",
+    "summary": "Item Not Received claim assessed at 20/100 (WEAK defense strength). Recommended strategy: ACCEPT.",
+    "recommendation": "accept",
+    "draftNotes": "Formal Merchant Defense Response for Dispute PP-D-1004 [F1] regarding MERCHANDISE_OR_SERVICE_NOT_RECEIVED [F2].\n\nThe merchant processed the customer order. Due to lack of formal carrier tracking confirmation, we are providing available transaction records for review.",
+    "citedFactIds": [
+      "F1",
+      "F2"
+    ],
+    "generatedAt": "2026-11-07T09:21:39.085Z",
     "needsReview": false
   }
 }

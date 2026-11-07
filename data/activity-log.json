@@ -1,5 +1,16 @@
 [
   {
+    "id": "act_1793995132413_efkwi",
+    "timestamp": "2026-11-06T19:58:52.413Z",
+    "disputeId": "PP-D-1004",
+    "action": "accept",
+    "status": "success",
+    "dryRun": true,
+    "payload": {
+      "note": "Merchant accepted customer claim."
+    }
+  },
+  {
     "id": "act_1793994625820_32gss",
     "timestamp": "2026-11-06T19:50:25.820Z",
     "disputeId": "PP-D-1001",
