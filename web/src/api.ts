@@ -1,6 +1,6 @@
 import { EnrichedDispute, HealthResponse, ActivityLogEntry, CachedAIAnalysis } from './types';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://disputecopilot.onrender.com/api';
 
 export async function fetchHealth(): Promise<HealthResponse> {
   const res = await fetch(`${API_BASE}/health`);

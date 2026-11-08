@@ -1,0 +1,801 @@
+openapi: 3.0.3
+info:
+  title: Dispute Copilot API
+  description: |
+    REST API for **Dispute Copilot**, an autonomous merchant defense assistant built for the PayPal AI Hackathon.
+    It correlates active PayPal payment disputes with store order fulfillment records, calculates deterministic
+    winnability scores (0–100), synthesizes grounded Evidence Packs, and generates defense response drafts using Gemini AI.
+  version: 1.0.0
+  contact:
+    name: Dispute Copilot Team
+    url: https://github.com/your-username/DisputeCopilot_PayPal_AI
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://disputecopilot.onrender.com
+    description: Production Deployment (Render)
+  - url: http://localhost:3000
+    description: Local Development Server
+
+tags:
+  - name: System
+    description: Health and configuration monitoring endpoints
+  - name: Disputes
+    description: PayPal dispute retrieval, evidence pack compilation, and scoring
+  - name: AI
+    description: Grounded defense drafting and citation analysis via Gemini
+  - name: Actions
+    description: Merchant-approved PayPal dispute actions (evidence submission, claim acceptance, settlement offers)
+  - name: Audit
+    description: Chronological merchant action logging and audit trail
+
+paths:
+  /api/health:
+    get:
+      tags:
+        - System
+      summary: Health & Configuration Status
+      description: Returns service operational status, active data mode (sandbox vs fixture), dry run safety flag, and order/dispute statistics.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy and configured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                dataMode: sandbox
+                dryRun: true
+                geminiModel: gemini-3.8-flash
+                hasPayPalCredentials: true
+                hasGeminiKey: true
+                ordersCount: 6
+                disputesCount: 6
+                timestamp: '2026-11-08T04:38:00.000Z'
+
+  /api/disputes:
+    get:
+      tags:
+        - Disputes
+      summary: List All Disputes
+      description: |
+        Retrieves all active PayPal customer disputes enriched with matched store order data,
+        indexed Evidence Packs, deterministic winnability scores, and live deadline calculations.
+        Results are sorted ascending by response deadline.
+      operationId: listDisputes
+      responses:
+        '200':
+          description: Successfully retrieved list of enriched disputes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisputesListResponse'
+        '500':
+          description: Internal server error while fetching disputes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/disputes/{id}:
+    get:
+      tags:
+        - Disputes
+      summary: Get Single Dispute Details
+      description: Fetches full details for a specific dispute, including its store order match, evidence pack facts, score breakdown, and cached AI analysis.
+      operationId: getDisputeById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique PayPal dispute identifier (e.g. PP-D-1001).
+          schema:
+            type: string
+            example: PP-D-1001
+      responses:
+        '200':
+          description: Dispute details found and returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichedDispute'
+        '404':
+          description: Dispute not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Failed to retrieve dispute details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/disputes/{id}/analyze:
+    post:
+      tags:
+        - AI
+      summary: Generate or Refresh Gemini AI Defense Analysis
+      description: |
+        Invokes Google Gemini to evaluate the dispute and Evidence Pack.
+        Produces structured JSON containing strategic recommendation (FIGHT / ACCEPT / PARTIAL_OFFER),
+        summary, and a factual draft defense strictly citing Evidence Pack fact IDs ([F1], [F2]).
+        Validates all citations against the Evidence Pack and caches the output locally.
+      operationId: analyzeDispute
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique PayPal dispute identifier.
+          schema:
+            type: string
+            example: PP-D-1001
+      responses:
+        '200':
+          description: AI analysis successfully generated and verified.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeResponse'
+        '404':
+          description: Dispute not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Generation or citation verification failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/disputes/{id}/submit-evidence:
+    post:
+      tags:
+        - Actions
+      summary: Submit Evidence to PayPal
+      description: |
+        Submits merchant evidence statement to PayPal Disputes API v1 (`POST /v1/customer/disputes/{id}/provide-evidence`).
+        If `DRY_RUN=true`, validates and logs the payload in the audit trail without modifying live account state.
+      operationId: submitEvidence
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique PayPal dispute identifier.
+          schema:
+            type: string
+            example: PP-D-1001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitEvidenceRequest'
+      responses:
+        '200':
+          description: Evidence submitted or safely validated under DRY_RUN.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultResponse'
+        '400':
+          description: Invalid request body (e.g. notes under 5 characters).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Submission failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/disputes/{id}/accept:
+    post:
+      tags:
+        - Actions
+      summary: Accept Dispute Claim
+      description: |
+        Concedes liability and accepts the customer claim via PayPal Disputes API v1 (`POST /v1/customer/disputes/{id}/accept-claim`).
+        Authorizes full refund to buyer. If `DRY_RUN=true`, validates and records action without sending network mutation.
+      operationId: acceptClaim
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique PayPal dispute identifier.
+          schema:
+            type: string
+            example: PP-D-1001
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptClaimRequest'
+      responses:
+        '200':
+          description: Claim accepted or validated under DRY_RUN.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultResponse'
+        '500':
+          description: Accept claim action failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/disputes/{id}/offer:
+    post:
+      tags:
+        - Actions
+      summary: Propose Partial Settlement Offer
+      description: |
+        Submits a partial refund settlement offer to the buyer via PayPal Disputes API v1 (`POST /v1/customer/disputes/{id}/make-offer`).
+        If `DRY_RUN=true`, validates offer amount and records action in audit trail without live mutation.
+      operationId: makeOffer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique PayPal dispute identifier.
+          schema:
+            type: string
+            example: PP-D-1001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MakeOfferRequest'
+      responses:
+        '200':
+          description: Offer submitted or validated under DRY_RUN.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResultResponse'
+        '400':
+          description: Invalid offer amount.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Offer submission failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/activity:
+    get:
+      tags:
+        - Audit
+      summary: Retrieve Merchant Audit Trail
+      description: Returns the chronological, immutable log of merchant actions, submitted evidence statements, and settlement decisions.
+      operationId: getActivityLog
+      responses:
+        '200':
+          description: Successfully retrieved audit log.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityLogResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - dataMode
+        - dryRun
+        - ordersCount
+        - disputesCount
+        - timestamp
+      properties:
+        status:
+          type: string
+          example: ok
+        dataMode:
+          type: string
+          enum: [sandbox, fixture]
+          example: sandbox
+        dryRun:
+          type: boolean
+          example: true
+        geminiModel:
+          type: string
+          example: gemini-3.8-flash
+        hasPayPalCredentials:
+          type: boolean
+          example: true
+        hasGeminiKey:
+          type: boolean
+          example: true
+        ordersCount:
+          type: integer
+          example: 6
+        disputesCount:
+          type: integer
+          example: 6
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-11-08T04:38:00.000Z'
+
+    DisputesListResponse:
+      type: object
+      required:
+        - dataMode
+        - dryRun
+        - total
+        - disputes
+      properties:
+        dataMode:
+          type: string
+          enum: [sandbox, fixture]
+          example: sandbox
+        configuredMode:
+          type: string
+          example: sandbox
+        dryRun:
+          type: boolean
+          example: true
+        total:
+          type: integer
+          example: 6
+        warning:
+          type: string
+          nullable: true
+          example: null
+        disputes:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnrichedDispute'
+
+    EnrichedDispute:
+      type: object
+      required:
+        - dispute_id
+        - create_time
+        - update_time
+        - dispute_amount
+        - status
+        - reason
+        - seller_response_due_date
+        - evidencePack
+        - score
+        - hoursRemaining
+      properties:
+        dispute_id:
+          type: string
+          example: PP-D-1001
+        create_time:
+          type: string
+          format: date-time
+          example: '2026-10-29T10:15:00Z'
+        update_time:
+          type: string
+          format: date-time
+          example: '2026-10-29T10:15:00Z'
+        dispute_amount:
+          $ref: '#/components/schemas/Money'
+        status:
+          type: string
+          example: WAITING_FOR_SELLER_RESPONSE
+        dispute_state:
+          type: string
+          example: REQUIRED_ACTION
+        dispute_lifecycle_stage:
+          type: string
+          example: INQUIRY
+        reason:
+          type: string
+          example: MERCHANDISE_OR_SERVICE_NOT_RECEIVED
+        seller_response_due_date:
+          type: string
+          format: date-time
+          example: '2026-11-08T18:00:00Z'
+        disputed_transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisputedTransaction'
+        matchedOrder:
+          $ref: '#/components/schemas/StoreOrder'
+        evidencePack:
+          $ref: '#/components/schemas/EvidencePack'
+        score:
+          $ref: '#/components/schemas/ScoreResult'
+        hoursRemaining:
+          type: integer
+          example: 36
+        cachedAnalysis:
+          $ref: '#/components/schemas/CachedAIAnalysis'
+
+    Money:
+      type: object
+      required:
+        - currency_code
+        - value
+      properties:
+        currency_code:
+          type: string
+          example: USD
+        value:
+          type: string
+          example: '349.99'
+
+    DisputedTransaction:
+      type: object
+      required:
+        - seller_transaction_id
+      properties:
+        seller_transaction_id:
+          type: string
+          example: REPLACE_WITH_TXN_ID_1
+        buyer_transaction_id:
+          type: string
+          example: BUYER_TXN_1001
+        gross_amount:
+          $ref: '#/components/schemas/Money'
+        buyer:
+          type: object
+          properties:
+            name:
+              type: string
+              example: Sarah Jenkins
+        seller_protection_eligible:
+          type: boolean
+          example: true
+
+    StoreOrder:
+      type: object
+      nullable: true
+      properties:
+        orderId:
+          type: string
+          example: ORD-1001
+        paypalTransactionId:
+          type: string
+          example: REPLACE_WITH_TXN_ID_1
+        customerName:
+          type: string
+          example: Sarah Jenkins
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: Sony WH-1000XM5 Wireless Headphones
+              description:
+                type: string
+                example: Premium noise cancelling headphones
+              price:
+                type: number
+                example: 349.99
+        amount:
+          type: number
+          example: 349.99
+        currency:
+          type: string
+          example: USD
+        carrier:
+          type: string
+          nullable: true
+          example: UPS
+        trackingNumber:
+          type: string
+          nullable: true
+          example: 1Z9999999999999991
+        listingDescription:
+          type: string
+          example: Brand new authentic Sony WH-1000XM5 Headphones in sealed box.
+        returnPolicyText:
+          type: string
+          example: 30-day return policy for unopened items.
+
+    EvidencePack:
+      type: object
+      required:
+        - facts
+        - missingItems
+      properties:
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceFact'
+        missingItems:
+          type: array
+          items:
+            type: string
+          example: []
+
+    EvidenceFact:
+      type: object
+      required:
+        - id
+        - label
+        - value
+        - source
+      properties:
+        id:
+          type: string
+          example: F1
+        label:
+          type: string
+          example: Tracking Number
+        value:
+          type: string
+          example: 'UPS: 1Z9999999999999991'
+        source:
+          type: string
+          enum: [tracking, order, refund_history, customer_messages, paypal_dispute]
+          example: tracking
+
+    ScoreResult:
+      type: object
+      required:
+        - totalScore
+        - band
+        - disputeReason
+        - breakdown
+        - summary
+      properties:
+        totalScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 100
+        band:
+          type: string
+          enum: [strong, medium, weak]
+          example: strong
+        disputeReason:
+          type: string
+          example: MERCHANDISE_OR_SERVICE_NOT_RECEIVED
+        breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/RubricItemResult'
+        summary:
+          type: string
+          example: Item Not Received claim assessed at 100/100 (STRONG defense strength).
+
+    RubricItemResult:
+      type: object
+      required:
+        - id
+        - title
+        - pointsPossible
+        - pointsAwarded
+        - passed
+        - reason
+      properties:
+        id:
+          type: string
+          example: INR_TRACKING_EXISTS
+        title:
+          type: string
+          example: Tracking Number Provided
+        pointsPossible:
+          type: integer
+          example: 20
+        pointsAwarded:
+          type: integer
+          example: 20
+        passed:
+          type: boolean
+          example: true
+        reason:
+          type: string
+          example: 'Tracking provided with UPS: 1Z9999999999999991'
+
+    CachedAIAnalysis:
+      type: object
+      nullable: true
+      required:
+        - disputeId
+        - summary
+        - recommendation
+        - draftNotes
+        - citedFactIds
+        - generatedAt
+      properties:
+        disputeId:
+          type: string
+          example: PP-D-1001
+        summary:
+          type: string
+          example: Carrier tracking confirms on-time delivery with recipient signature. High probability of winning under Seller Protection.
+        recommendation:
+          type: string
+          enum: [fight, accept, partial_offer]
+          example: fight
+        recommendedOfferAmount:
+          type: number
+          nullable: true
+          example: null
+        draftNotes:
+          type: string
+          example: 'The merchant fulfilled and shipped this order promptly [F1]. Carrier tracking confirms delivery [F3] signed by recipient [F5].'
+        citedFactIds:
+          type: array
+          items:
+            type: string
+          example: [F1, F3, F5]
+        generatedAt:
+          type: string
+          format: date-time
+          example: '2026-11-08T04:40:00.000Z'
+        needsReview:
+          type: boolean
+          example: false
+
+    AnalyzeResponse:
+      type: object
+      required:
+        - success
+        - disputeId
+        - analysis
+      properties:
+        success:
+          type: boolean
+          example: true
+        disputeId:
+          type: string
+          example: PP-D-1001
+        analysis:
+          $ref: '#/components/schemas/CachedAIAnalysis'
+
+    SubmitEvidenceRequest:
+      type: object
+      required:
+        - notes
+      properties:
+        notes:
+          type: string
+          minLength: 5
+          description: Formal merchant statement and factual defense notes.
+          example: Carrier tracking confirms package delivered on Oct 27 signed by recipient. Please resolve under Seller Protection.
+
+    AcceptClaimRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          description: Optional explanation for accepting claim and issuing full refund.
+          example: Merchant accepted customer claim.
+
+    MakeOfferRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+          description: Partial refund settlement amount in USD.
+          example: 50.00
+        note:
+          type: string
+          description: Optional note to the customer describing the settlement proposal.
+          example: Goodwill partial refund offer to resolve cosmetic inquiry.
+
+    ActionResultResponse:
+      type: object
+      required:
+        - success
+        - dryRun
+        - disputeId
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+        dryRun:
+          type: boolean
+          example: true
+        disputeId:
+          type: string
+          example: PP-D-1001
+        activityId:
+          type: string
+          example: act_1793995132413_efkwi
+        message:
+          type: string
+          example: 'DRY_RUN mode active: Evidence payload validated without sending to PayPal.'
+        submittedPayload:
+          type: object
+
+    ActivityLogResponse:
+      type: object
+      required:
+        - total
+        - activity
+      properties:
+        total:
+          type: integer
+          example: 3
+        activity:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityLogEntry'
+
+    ActivityLogEntry:
+      type: object
+      required:
+        - id
+        - timestamp
+        - disputeId
+        - action
+        - status
+        - dryRun
+      properties:
+        id:
+          type: string
+          example: act_1793994625820_32gss
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-11-06T19:50:25.820Z'
+        disputeId:
+          type: string
+          example: PP-D-1001
+        action:
+          type: string
+          enum: [submit-evidence, accept, offer]
+          example: submit-evidence
+        status:
+          type: string
+          enum: [success, failed]
+          example: success
+        dryRun:
+          type: boolean
+          example: true
+        payload:
+          type: object
+        response:
+          type: object
+        error:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: Failed to retrieve dispute details
+        details:
+          type: string
+          example: Detailed error message
+
+    ValidationErrorResponse:
+      type: object
+      required:
+        - error
+        - issues
+      properties:
+        error:
+          type: string
+          example: Invalid request body
+        issues:
+          type: array
+          items:
+            type: string
+          example: ['Notes must be at least 5 characters long']

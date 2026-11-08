@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Header } from './components/Header';
-import { JudgeIntroBanner } from './components/JudgeIntroBanner';
 import { DisputeTable } from './components/DisputeTable';
 import { DisputeDetailModal } from './components/DisputeDetailModal';
 import { ActivityLogView } from './components/ActivityLogView';
+import { AnalyticsTab } from './components/AnalyticsTab';
 import { fetchDisputes, fetchHealth } from './api';
 import { EnrichedDispute, DataMode } from './types';
 import { ShieldCheck, AlertTriangle, DollarSign, Clock, RefreshCw } from 'lucide-react';
@@ -16,7 +16,7 @@ export const App: React.FC = () => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'disputes' | 'activity'>('disputes');
+  const [activeTab, setActiveTab] = useState<'disputes' | 'analytics' | 'activity'>('disputes');
   const [selectedDispute, setSelectedDispute] = useState<EnrichedDispute | null>(null);
 
   const loadData = useCallback(async (isRefresh = false) => {
@@ -82,11 +82,13 @@ export const App: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'activity' ? (
           <ActivityLogView onBack={() => setActiveTab('disputes')} />
+        ) : activeTab === 'analytics' ? (
+          <AnalyticsTab
+            disputes={disputes}
+            onSelectDispute={(dispute) => setSelectedDispute(dispute)}
+          />
         ) : (
           <div className="space-y-6">
-            {/* Judge Overview Banner */}
-            <JudgeIntroBanner />
-
             {/* Quick Metrics Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">

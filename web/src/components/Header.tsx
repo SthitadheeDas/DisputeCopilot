@@ -1,12 +1,12 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, Database, History, RefreshCw, Zap } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Database, History, RefreshCw, Zap, BarChart3 } from 'lucide-react';
 import { DataMode } from '../types';
 
 interface HeaderProps {
   dataMode: DataMode;
   dryRun: boolean;
-  activeTab: 'disputes' | 'activity';
-  setActiveTab: (tab: 'disputes' | 'activity') => void;
+  activeTab: 'disputes' | 'analytics' | 'activity';
+  setActiveTab: (tab: 'disputes' | 'analytics' | 'activity') => void;
   onRefresh: () => void;
   refreshing: boolean;
 }
@@ -54,6 +54,17 @@ export const Header: React.FC<HeaderProps> = ({
                 }`}
               >
                 Disputes
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center space-x-1.5 transition-colors ${
+                  activeTab === 'analytics'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                <span>Analytics</span>
               </button>
               <button
                 onClick={() => setActiveTab('activity')}
