@@ -47,6 +47,7 @@ export interface StoreOrder {
   items: { name: string; description: string; price: number }[];
   amount: number;
   currency: string;
+  orderedAt?: string;
   shippingAddress: {
     line1: string;
     city: string;
