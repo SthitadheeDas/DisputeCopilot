@@ -1,0 +1,31 @@
+# Docs
+
+- Home
+  - [Home](/)
+- SDKs
+  - [SDKs](/sdks): Client libraries for this API.
+  - [TypeScript SDK](/sdks/typescript): Install and start using the TypeScript SDK.
+  - [Python SDK](/sdks/python): Install and start using the Python SDK.
+- API Reference
+  - System: Health and configuration monitoring endpoints
+    - [Health & Configuration Status](/api/openapi/system/getHealth): Returns service operational status, active data mode (sandbox vs fixture), dry run safety flag, and order/dispute statistics.
+  - Disputes: PayPal dispute retrieval, evidence pack compilation, and scoring
+    - [List All Disputes](/api/openapi/disputes/listDisputes): Retrieves all active PayPal customer disputes enriched with matched store order data,
+indexed Evidence Packs, deterministic winnability scores, and live deadline calculations.
+Results are sorted ascending by response deadline.
+    - [Reset Demo Dispute Database](/api/openapi/disputes/resetDisputesDemo): Resets mock fixture disputes back to their initial active state (6 active disputes, clearing test concessions/refunds).
+    - [Get Single Dispute Details](/api/openapi/disputes/getDisputeById): Fetches full details for a specific dispute, including its store order match, evidence pack facts, score breakdown, and cached AI analysis.
+  - A I: Grounded defense drafting and citation analysis via Gemini
+    - [Generate or Refresh Gemini AI Defense Analysis](/api/openapi/ai/analyzeDispute): Invokes Google Gemini to evaluate the dispute and Evidence Pack.
+Produces structured JSON containing strategic recommendation (FIGHT / ACCEPT / PARTIAL_OFFER),
+summary, and a factual draft defense strictly citing Evidence Pack fact IDs ([F1], [F2]).
+Validates all citations against the Evidence Pack and caches the output locally.
+  - Actions: Merchant-approved PayPal dispute actions (evidence submission, claim acceptance, settlement offers)
+    - [Submit Evidence to PayPal](/api/openapi/actions/submitEvidence): Submits merchant evidence statement to PayPal Disputes API v1 (`POST /v1/customer/disputes/{id}/provide-evidence`).
+If `DRY_RUN=true`, validates and logs the payload in the audit trail without modifying live account state.
+    - [Accept Dispute Claim](/api/openapi/actions/acceptClaim): Concedes liability and accepts the customer claim via PayPal Disputes API v1 (`POST /v1/customer/disputes/{id}/accept-claim`).
+Authorizes full refund to buyer. If `DRY_RUN=true`, validates and records action without sending network mutation.
+    - [Propose Partial Settlement Offer](/api/openapi/actions/makeOffer): Submits a partial refund settlement offer to the buyer via PayPal Disputes API v1 (`POST /v1/customer/disputes/{id}/make-offer`).
+If `DRY_RUN=true`, validates offer amount and records action in audit trail without live mutation.
+  - Audit: Chronological merchant action logging and audit trail
+    - [Retrieve Merchant Audit Trail](/api/openapi/audit/getActivityLog): Returns the chronological, immutable log of merchant actions, submitted evidence statements, and settlement decisions.

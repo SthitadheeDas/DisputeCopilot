@@ -1,0 +1,14 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@apimatic/cli@2/apimatic.schema.json",
+  "schemaVersion": 1,
+  "portal": {
+    "site": {
+      "name": "Dispute Copilot Developer Portal",
+      "description": "Autonomous merchant defense assistant API, documentation, and SDKs for PayPal payment dispute resolution."
+    }
+  },
+  "languages": {
+    "typescript": {},
+    "python": {}
+  }
+}

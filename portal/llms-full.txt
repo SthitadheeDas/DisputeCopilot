@@ -1,0 +1,175 @@
+# SDKs (/sdks)
+
+- [TypeScript](/sdks/typescript): [Download SDK](/__downloads/sdk/typescript.zip)
+- [Python](/sdks/python): [Download SDK](/__downloads/sdk/python.zip)
+
+# Python SDK (/sdks/python)
+
+[Download SDK](/__downloads/sdk/python.zip)
+
+## Intro [#intro]
+
+The Dispute Copilot API SDK provides access to the Dispute Copilot API REST APIs.
+
+REST API for **Dispute Copilot**, an autonomous merchant defense assistant built for the PayPal AI Hackathon.
+It correlates active PayPal payment disputes with store order fulfillment records, calculates deterministic
+winnability scores (0–100), synthesizes grounded Evidence Packs, and generates defense response drafts using Gemini AI.
+
+## Installation [#installation]
+
+Add the SDK to your project from its folder, with whichever package manager your project uses. Give each tool a path containing a slash, such as `../dispute-copilot-api` — a bare folder name is looked up on PyPI instead, and resolves to whatever project holds that name there:
+
+```bash
+pip install <path-to-sdk>
+```
+
+```bash
+uv add <path-to-sdk>
+```
+
+```bash
+poetry add <path-to-sdk>
+```
+
+## Quick Start [#quick-start]
+
+### Synchronous client [#synchronous-client]
+
+Construct `DisputeCopilotApiClient` with keyword arguments, and call `close()` when you are done. Every argument is optional.
+
+```python
+from dispute_copilot_api import DisputeCopilotApiClient
+
+client = DisputeCopilotApiClient(environment="production")
+
+client.close()
+```
+
+Alternatively, scope it — `with DisputeCopilotApiClient(...) as client:` closes the pool on exit.
+
+### Asynchronous client [#asynchronous-client]
+
+`AsyncDisputeCopilotApiClient` mirrors `DisputeCopilotApiClient` with **identical method names**, and every endpoint method is a coroutine. It takes the same arguments, with some differences — for example, the transport argument is `custom_async_http_client`.
+
+```python
+from asyncio import run
+
+from dispute_copilot_api import AsyncDisputeCopilotApiClient
+
+async def main() -> None:
+    client = AsyncDisputeCopilotApiClient(environment="production")
+    await client.aclose()
+
+run(main())
+```
+
+Alternatively, scope it — `async with AsyncDisputeCopilotApiClient(...) as client:` closes the pool on exit.
+
+# TypeScript SDK (/sdks/typescript)
+
+[Download SDK](/__downloads/sdk/typescript.zip)
+
+## Intro [#intro]
+
+The Dispute Copilot API SDK provides access to the Dispute Copilot API REST APIs.
+
+REST API for **Dispute Copilot**, an autonomous merchant defense assistant built for the PayPal AI Hackathon.
+It correlates active PayPal payment disputes with store order fulfillment records, calculates deterministic
+winnability scores (0–100), synthesizes grounded Evidence Packs, and generates defense response drafts using Gemini AI.
+
+## Installation [#installation]
+
+The SDK compiles to `dist/` before it can be referenced — run its `build` script once in the SDK folder, then add it to your project by path:
+
+```bash
+npm install <path-to-sdk>
+```
+
+## Quick Start [#quick-start]
+
+Create one client and reuse it. Configure its behaviour through `ClientOptions`.
+
+```ts
+import { DisputeCopilotApiClient, ServerEnvironment } from "dispute-copilot-api";
+
+const client = new DisputeCopilotApiClient({ serverEnvironment: ServerEnvironment.Production });
+```
+
+Nothing in `ClientOptions` is required — `new DisputeCopilotApiClient()` compiles — and each option left out falls back to its default. `serverEnvironment` is spelled out above so the environment a call reaches is visible where the client is built rather than inherited silently.
+
+### From CommonJS [#from-commonjs]
+
+The package ships both dialects from a single entry, so `require` works with full types. In a TypeScript CommonJS file use the `import ... = require(...)` form — a plain destructuring `require` runs fine but gives you `any`.
+
+```ts
+import sdk = require("dispute-copilot-api");
+
+const client = new sdk.DisputeCopilotApiClient({ serverEnvironment: sdk.ServerEnvironment.Production });
+```
+
+# Health & Configuration Status (/api/openapi/system/getHealth)
+
+`GET /api/health`
+
+Returns service operational status, active data mode (sandbox vs fixture), dry run safety flag, and order/dispute statistics.
+
+# List All Disputes (/api/openapi/disputes/listDisputes)
+
+`GET /api/disputes`
+
+Retrieves all active PayPal customer disputes enriched with matched store order data,
+indexed Evidence Packs, deterministic winnability scores, and live deadline calculations.
+Results are sorted ascending by response deadline.
+
+
+# Reset Demo Dispute Database (/api/openapi/disputes/resetDisputesDemo)
+
+`POST /api/disputes/reset`
+
+Resets mock fixture disputes back to their initial active state (6 active disputes, clearing test concessions/refunds).
+
+# Get Single Dispute Details (/api/openapi/disputes/getDisputeById)
+
+`GET /api/disputes/{id}`
+
+Fetches full details for a specific dispute, including its store order match, evidence pack facts, score breakdown, and cached AI analysis.
+
+# Generate or Refresh Gemini AI Defense Analysis (/api/openapi/ai/analyzeDispute)
+
+`POST /api/disputes/{id}/analyze`
+
+Invokes Google Gemini to evaluate the dispute and Evidence Pack.
+Produces structured JSON containing strategic recommendation (FIGHT / ACCEPT / PARTIAL_OFFER),
+summary, and a factual draft defense strictly citing Evidence Pack fact IDs ([F1], [F2]).
+Validates all citations against the Evidence Pack and caches the output locally.
+
+
+# Submit Evidence to PayPal (/api/openapi/actions/submitEvidence)
+
+`POST /api/disputes/{id}/submit-evidence`
+
+Submits merchant evidence statement to PayPal Disputes API v1 (`POST /v1/customer/disputes/{id}/provide-evidence`).
+If `DRY_RUN=true`, validates and logs the payload in the audit trail without modifying live account state.
+
+
+# Accept Dispute Claim (/api/openapi/actions/acceptClaim)
+
+`POST /api/disputes/{id}/accept`
+
+Concedes liability and accepts the customer claim via PayPal Disputes API v1 (`POST /v1/customer/disputes/{id}/accept-claim`).
+Authorizes full refund to buyer. If `DRY_RUN=true`, validates and records action without sending network mutation.
+
+
+# Propose Partial Settlement Offer (/api/openapi/actions/makeOffer)
+
+`POST /api/disputes/{id}/offer`
+
+Submits a partial refund settlement offer to the buyer via PayPal Disputes API v1 (`POST /v1/customer/disputes/{id}/make-offer`).
+If `DRY_RUN=true`, validates offer amount and records action in audit trail without live mutation.
+
+
+# Retrieve Merchant Audit Trail (/api/openapi/audit/getActivityLog)
+
+`GET /api/activity`
+
+Returns the chronological, immutable log of merchant actions, submitted evidence statements, and settlement decisions.
