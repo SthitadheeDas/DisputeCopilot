@@ -182,6 +182,9 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
       setActionSuccess(res.message);
       setConfirmPayloadModal(null);
       onActionComplete();
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : 'Submission failed');
     } finally {
@@ -197,8 +200,11 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
     setActionError(null);
     try {
       const res = await acceptClaim(dispute.dispute_id);
-      setActionSuccess(res.message);
+      setActionSuccess(res.message || 'Claim accepted and liability conceded.');
       onActionComplete();
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : 'Accept claim failed');
     } finally {
@@ -220,9 +226,12 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
         amt,
         'Merchant partial refund goodwill offer'
       );
-      setActionSuccess(res.message);
+      setActionSuccess(res.message || 'Settlement offer submitted successfully.');
       setShowOfferInput(false);
       onActionComplete();
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : 'Offer submission failed');
     } finally {
@@ -290,9 +299,14 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
 
         {/* Action feedback banners */}
         {actionSuccess && (
-          <div className="bg-emerald-50 border-b border-emerald-200 px-6 py-3 flex items-center space-x-2 text-sm text-emerald-800">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <span>{actionSuccess}</span>
+          <div className="bg-emerald-50 border-b border-emerald-200 px-6 py-3 flex items-center justify-between text-sm text-emerald-800 animate-in fade-in duration-200">
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span>{actionSuccess}</span>
+            </div>
+            <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-200">
+              Auto-closing...
+            </span>
           </div>
         )}
         {actionError && (

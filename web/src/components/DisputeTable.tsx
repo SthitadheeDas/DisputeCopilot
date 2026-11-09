@@ -130,7 +130,18 @@ export const DisputeTable: React.FC<DisputeTableProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      {disputes.length === 0 ? (
+        <div className="p-12 text-center space-y-3">
+          <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <h4 className="font-bold text-slate-800 text-sm">All Disputes Resolved</h4>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            Zero active customer claims requiring merchant response. All disputes have been conceded, settled, or defended. View the Analytics tab for lifetime financial tracking.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
         <table className="w-full text-left text-sm text-slate-600">
           <thead className="bg-slate-50 text-slate-700 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
             <tr>
@@ -237,6 +248,7 @@ export const DisputeTable: React.FC<DisputeTableProps> = ({
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 };

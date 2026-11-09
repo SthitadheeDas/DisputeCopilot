@@ -29,3 +29,26 @@ export function findFixtureDisputeById(
   const disputes = loadFixtureDisputes();
   return disputes.find((d) => d.dispute_id === disputeId) || null;
 }
+
+export function updateFixtureDispute(
+  disputeId: string,
+  updates: Partial<PayPalDispute>
+): PayPalDispute | null {
+  const disputes = loadFixtureDisputes();
+  const dispute = disputes.find((d) => d.dispute_id === disputeId);
+  if (!dispute) return null;
+
+  Object.assign(dispute, updates, {
+    update_time: new Date().toISOString(),
+  });
+
+  try {
+    if (fs.existsSync(FIXTURES_FILE)) {
+      fs.writeFileSync(FIXTURES_FILE, JSON.stringify(disputes, null, 2), 'utf-8');
+    }
+  } catch (err) {
+    console.error(`[Fixtures] Error updating fixtures file:`, err);
+  }
+
+  return dispute;
+}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import {
   ModuleRegistry,
@@ -62,6 +62,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 }) => {
   const [filterMode, setFilterMode] = useState<TransactionFilterMode>('all');
   const [quickFilterText, setQuickFilterText] = useState<string>('');
+  const gridRef = useRef<AgGridReact<UnifiedTransactionRow>>(null);
 
   // 1. Map disputed transactions from live/fixture disputes
   const disputedRows: UnifiedTransactionRow[] = useMemo(() => {
@@ -71,6 +72,18 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       const score = d.score.totalScore;
       const aiRec = d.cachedAnalysis?.recommendation;
 
+      const statusUpper = (d.status || '').toUpperCase();
+      const lifecycleUpper = (d.dispute_lifecycle_stage || '').toUpperCase();
+      const stateUpper = (d.dispute_state || '').toUpperCase();
+
+      const isResolved =
+        statusUpper === 'RESOLVED' ||
+        statusUpper === 'RESOLVED_ACCEPTED' ||
+        statusUpper === 'CONCEDED' ||
+        statusUpper === 'CLOSED' ||
+        lifecycleUpper === 'RESOLVED' ||
+        stateUpper === 'RESOLVED';
+
       // Standard PayPal chargeback/dispute fee is $15.00
       const PAYPAL_DISPUTE_FEE = 15.0;
 
@@ -79,7 +92,12 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       let moneyGained = 0;
       let moneyLost = 0;
 
-      if (aiRec === 'accept' || (!aiRec && score < 40)) {
+      if (
+        statusUpper === 'CONCEDED' ||
+        statusUpper === 'RESOLVED_ACCEPTED' ||
+        aiRec === 'accept' ||
+        (!aiRec && score < 40 && isResolved)
+      ) {
         // Conceded / Accepted claim: Merchant forfeits stake amount + PayPal dispute fee
         actionTaken = 'Conceded';
         disputeStatus = 'Lost';
@@ -100,7 +118,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       } else {
         // Fought via Gemini: 100% retained under PayPal Seller Protection, dispute fee waived
         actionTaken = 'Fought via Gemini';
-        disputeStatus = d.status === 'RESOLVED' || score >= 70 ? 'Won' : 'Active';
+        disputeStatus = isResolved || score >= 70 ? 'Won' : 'Active';
         moneyGained = stake;
         moneyLost = 0;
       }
@@ -219,6 +237,14 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     }
     return allTransactions;
   }, [filterMode, allTransactions]);
+
+  // Force AG Grid to reload row data and refresh cells whenever displayedRows updates
+  useEffect(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.redrawRows();
+      gridRef.current.api.refreshCells({ force: true });
+    }
+  }, [displayedRows]);
 
   // 6. Adaptive AG Grid Column Definitions
   const columnDefs = useMemo<ColDef<UnifiedTransactionRow>[]>(() => {
@@ -683,6 +709,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           style={{ height: '520px' }}
         >
           <AgGridReact<UnifiedTransactionRow>
+            ref={gridRef}
             rowData={displayedRows}
             columnDefs={columnDefs}
             quickFilterText={quickFilterText}

@@ -8,6 +8,25 @@ import { fetchDisputes, fetchHealth } from './api';
 import { EnrichedDispute, DataMode } from './types';
 import { ShieldCheck, AlertTriangle, DollarSign, Clock, RefreshCw } from 'lucide-react';
 
+// Active dispute check: Filters out resolved, conceded, or closed claims
+export const isDisputeActive = (d: EnrichedDispute): boolean => {
+  const status = (d.status || '').toUpperCase();
+  const lifecycle = (d.dispute_lifecycle_stage || '').toUpperCase();
+  const state = (d.dispute_state || '').toUpperCase();
+
+  if (
+    status === 'RESOLVED' ||
+    status === 'RESOLVED_ACCEPTED' ||
+    status === 'CONCEDED' ||
+    status === 'CLOSED' ||
+    lifecycle === 'RESOLVED' ||
+    state === 'RESOLVED'
+  ) {
+    return false;
+  }
+  return true;
+};
+
 export const App: React.FC = () => {
   const [dataMode, setDataMode] = useState<DataMode>('fixture');
   const [dryRun, setDryRun] = useState<boolean>(true);
@@ -58,13 +77,28 @@ export const App: React.FC = () => {
     loadData();
   }, []);
 
-  // Compute summary metrics
-  const totalAmount = disputes.reduce(
-    (sum, d) => sum + parseFloat(d.dispute_amount.value || '0'),
-    0
+  // Filter active disputes for main queue
+  const activeDisputes = React.useMemo(() => {
+    return disputes.filter(isDisputeActive);
+  }, [disputes]);
+
+  // Compute summary metrics strictly for active disputes
+  const totalAmount = React.useMemo(
+    () =>
+      activeDisputes.reduce(
+        (sum, d) => sum + parseFloat(d.dispute_amount.value || '0'),
+        0
+      ),
+    [activeDisputes]
   );
-  const urgentCount = disputes.filter((d) => d.hoursRemaining <= 48).length;
-  const strongDefenseCount = disputes.filter((d) => d.score.band === 'strong').length;
+  const urgentCount = React.useMemo(
+    () => activeDisputes.filter((d) => d.hoursRemaining <= 48).length,
+    [activeDisputes]
+  );
+  const strongDefenseCount = React.useMemo(
+    () => activeDisputes.filter((d) => d.score.band === 'strong').length,
+    [activeDisputes]
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -104,7 +138,7 @@ export const App: React.FC = () => {
                   ${totalAmount.toFixed(2)}
                 </div>
                 <div className="text-xs text-slate-400 mt-1">
-                  Across {disputes.length} active customer claims
+                  Across {activeDisputes.length} active customer claims
                 </div>
               </div>
 
@@ -185,9 +219,9 @@ export const App: React.FC = () => {
                 </p>
               </div>
             ) : (
-              /* Disputes Table */
+              /* Disputes Table (Active Queue Only) */
               <DisputeTable
-                disputes={disputes}
+                disputes={activeDisputes}
                 onSelectDispute={(dispute) => setSelectedDispute(dispute)}
               />
             )}

@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { CONFIG } from '../config.js';
-import { loadFixtureDisputes, findFixtureDisputeById } from '../store/fixtures.js';
-import { findOrderByTransactionId, loadStoreOrders } from '../store/store.js';
+import { loadFixtureDisputes, findFixtureDisputeById, updateFixtureDispute } from '../store/fixtures.js';
+import { findOrderByTransactionId, loadStoreOrders, addOrderRefund } from '../store/store.js';
 import { buildEvidencePack, scoreDispute } from '../scoring/index.js';
-import { getCachedAnalysis } from '../store/cache.js';
+import { getCachedAnalysis, setCachedAnalysis } from '../store/cache.js';
 import { getActivityLog, logActivity } from '../store/activity.js';
 import {
   fetchLiveDisputes,
@@ -202,6 +202,23 @@ router.post('/disputes/:id/submit-evidence', async (req, res) => {
   try {
     const result = await submitPayPalEvidence(id, parsed.data.notes);
 
+    // Update in-memory & file mock state
+    updateFixtureDispute(id, {
+      status: 'UNDER_REVIEW',
+      dispute_state: 'NO_ACTION_REQUIRED',
+    });
+
+    const cached = getCachedAnalysis(id);
+    setCachedAnalysis({
+      disputeId: id,
+      summary: cached?.summary || 'Merchant submitted formal defense with grounded evidence.',
+      recommendation: 'fight',
+      draftNotes: parsed.data.notes,
+      citedFactIds: cached?.citedFactIds || ['F1', 'F2', 'F3'],
+      generatedAt: new Date().toISOString(),
+      needsReview: false,
+    });
+
     const log = logActivity({
       disputeId: id,
       action: 'submit-evidence',
@@ -239,6 +256,33 @@ router.post('/disputes/:id/accept', async (req, res) => {
 
   try {
     const result = await acceptPayPalClaim(id, note);
+
+    // Update in-memory & file mock state to resolved/conceded
+    updateFixtureDispute(id, {
+      status: 'RESOLVED_ACCEPTED',
+      dispute_state: 'RESOLVED',
+      dispute_lifecycle_stage: 'RESOLVED',
+    });
+
+    // Update cached analysis recommendation to 'accept'
+    const cached = getCachedAnalysis(id);
+    setCachedAnalysis({
+      disputeId: id,
+      summary: 'Merchant accepted customer claim and conceded liability.',
+      recommendation: 'accept',
+      draftNotes: note,
+      citedFactIds: cached?.citedFactIds || ['F1'],
+      generatedAt: new Date().toISOString(),
+      needsReview: false,
+    });
+
+    // Record refund on matched order in store.json if linked
+    const dispute = findFixtureDisputeById(id);
+    const txnId = dispute?.disputed_transactions?.[0]?.seller_transaction_id;
+    const amountVal = parseFloat(dispute?.dispute_amount?.value || '0');
+    if (txnId && amountVal > 0) {
+      addOrderRefund(txnId, amountVal, 'Full refund conceded via PayPal Dispute claim acceptance');
+    }
 
     const log = logActivity({
       disputeId: id,
@@ -285,6 +329,33 @@ router.post('/disputes/:id/offer', async (req, res) => {
 
   try {
     const result = await makePayPalOffer(id, parsed.data.amount, parsed.data.note);
+
+    // Update in-memory & file mock state to resolved/settled
+    updateFixtureDispute(id, {
+      status: 'RESOLVED',
+      dispute_state: 'RESOLVED',
+      dispute_lifecycle_stage: 'RESOLVED',
+    });
+
+    // Update cached analysis recommendation to 'partial_offer'
+    const cached = getCachedAnalysis(id);
+    setCachedAnalysis({
+      disputeId: id,
+      summary: `Merchant offered settlement refund of $${parsed.data.amount.toFixed(2)}.`,
+      recommendation: 'partial_offer',
+      recommendedOfferAmount: parsed.data.amount,
+      draftNotes: parsed.data.note || `Settlement offer of $${parsed.data.amount.toFixed(2)} submitted.`,
+      citedFactIds: cached?.citedFactIds || ['F1', 'F2'],
+      generatedAt: new Date().toISOString(),
+      needsReview: false,
+    });
+
+    // Record partial refund on matched order in store.json if linked
+    const dispute = findFixtureDisputeById(id);
+    const txnId = dispute?.disputed_transactions?.[0]?.seller_transaction_id;
+    if (txnId && parsed.data.amount > 0) {
+      addOrderRefund(txnId, parsed.data.amount, 'Partial settlement refund offered to buyer');
+    }
 
     const log = logActivity({
       disputeId: id,

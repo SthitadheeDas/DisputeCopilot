@@ -34,3 +34,31 @@ export function findOrderByOrderId(orderId: string): StoreOrder | null {
   const orders = loadStoreOrders();
   return orders.find((o) => o.orderId === orderId) || null;
 }
+
+export function addOrderRefund(
+  txnIdOrOrderId: string,
+  amount: number,
+  reason: string
+): StoreOrder | null {
+  const orders = loadStoreOrders();
+  const order = orders.find(
+    (o) => o.orderId === txnIdOrOrderId || o.paypalTransactionId === txnIdOrOrderId
+  );
+  if (!order) return null;
+
+  order.refunds.push({
+    amount,
+    date: new Date().toISOString(),
+    reason,
+  });
+
+  try {
+    if (fs.existsSync(STORE_FILE)) {
+      fs.writeFileSync(STORE_FILE, JSON.stringify(orders, null, 2), 'utf-8');
+    }
+  } catch (err) {
+    console.error(`[Store] Error saving store.json:`, err);
+  }
+
+  return order;
+}
