@@ -17,10 +17,15 @@ export const isDisputeActive = (d: EnrichedDispute): boolean => {
   if (
     status === 'RESOLVED' ||
     status === 'RESOLVED_ACCEPTED' ||
+    status === 'RESOLVED_DEFENDED' ||
+    status === 'DEFENDED' ||
     status === 'CONCEDED' ||
     status === 'CLOSED' ||
+    status === 'UNDER_REVIEW' ||
+    status === 'NO_ACTION_REQUIRED' ||
     lifecycle === 'RESOLVED' ||
-    state === 'RESOLVED'
+    state === 'RESOLVED' ||
+    state === 'NO_ACTION_REQUIRED'
   ) {
     return false;
   }
@@ -33,6 +38,7 @@ export const App: React.FC = () => {
   const [disputes, setDisputes] = useState<EnrichedDispute[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [resetting, setResetting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'disputes' | 'analytics' | 'activity'>('disputes');
@@ -73,6 +79,22 @@ export const App: React.FC = () => {
     }
   }, [selectedDispute]);
 
+  const handleResetDemoData = useCallback(async () => {
+    setResetting(true);
+    try {
+      const API_BASE =
+        (import.meta as any).env?.VITE_API_URL || 'https://disputecopilot.onrender.com/api';
+      await fetch(`${API_BASE}/disputes/reset`, {
+        method: 'POST',
+      });
+      await loadData(true);
+    } catch (err: unknown) {
+      console.error('Failed to reset demo data:', err);
+    } finally {
+      setResetting(false);
+    }
+  }, [loadData]);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -110,6 +132,8 @@ export const App: React.FC = () => {
         setActiveTab={setActiveTab}
         onRefresh={() => loadData(true)}
         refreshing={refreshing}
+        onResetDemoData={handleResetDemoData}
+        resetting={resetting}
       />
 
       {/* Main Content */}

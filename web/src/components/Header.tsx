@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, Database, History, RefreshCw, Zap, BarChart3 } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Database, History, RefreshCw, Zap, BarChart3, RotateCcw } from 'lucide-react';
 import { DataMode } from '../types';
 
 interface HeaderProps {
@@ -9,6 +9,8 @@ interface HeaderProps {
   setActiveTab: (tab: 'disputes' | 'analytics' | 'activity') => void;
   onRefresh: () => void;
   refreshing: boolean;
+  onResetDemoData?: () => void;
+  resetting?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +20,8 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   onRefresh,
   refreshing,
+  onResetDemoData,
+  resetting = false,
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
@@ -127,6 +131,19 @@ export const Header: React.FC<HeaderProps> = ({
                   <ShieldAlert className="w-3 h-3 text-red-600" />
                   <span>LIVE ACTIONS</span>
                 </div>
+              )}
+
+              {/* Reset Demo Data Button */}
+              {onResetDemoData && (
+                <button
+                  onClick={onResetDemoData}
+                  disabled={resetting}
+                  className="flex items-center space-x-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 hover:border-slate-400 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                  title="Reset mock dispute database back to default 6 active disputes"
+                >
+                  <RotateCcw className={`w-3 h-3 text-slate-600 ${resetting ? 'animate-spin' : ''}`} />
+                  <span>↻ Reset Demo Data</span>
+                </button>
               )}
             </div>
           </div>

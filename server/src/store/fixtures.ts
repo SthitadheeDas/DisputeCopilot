@@ -52,3 +52,23 @@ export function updateFixtureDispute(
 
   return dispute;
 }
+
+export function resetFixtureDisputes(): PayPalDispute[] {
+  const disputes = loadFixtureDisputes(true);
+  for (const d of disputes) {
+    d.status = 'WAITING_FOR_SELLER_RESPONSE';
+    d.dispute_state = 'REQUIRED_ACTION';
+    d.dispute_lifecycle_stage = 'INQUIRY';
+    d.update_time = new Date().toISOString();
+  }
+
+  try {
+    if (fs.existsSync(FIXTURES_FILE)) {
+      fs.writeFileSync(FIXTURES_FILE, JSON.stringify(disputes, null, 2), 'utf-8');
+    }
+  } catch (err) {
+    console.error(`[Fixtures] Error resetting fixtures file:`, err);
+  }
+
+  return disputes;
+}

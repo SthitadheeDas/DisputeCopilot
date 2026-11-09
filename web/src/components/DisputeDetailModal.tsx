@@ -174,19 +174,30 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
     setConfirmPayloadModal(payload);
   };
 
+  const handleApproveAndSubmit = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to approve and submit formal evidence defense for Dispute ${dispute.dispute_id}?`
+      )
+    ) {
+      return;
+    }
+    await handleExecuteEvidenceSubmit();
+  };
+
   const handleExecuteEvidenceSubmit = async () => {
     setSubmitting(true);
     setActionError(null);
     try {
       const res = await submitEvidence(dispute.dispute_id, draftNotes);
-      setActionSuccess(res.message);
+      setActionSuccess(res.message || 'Evidence submitted successfully to PayPal.');
       setConfirmPayloadModal(null);
       onActionComplete();
       setTimeout(() => {
         onClose();
       }, 1000);
     } catch (err: unknown) {
-      setActionError(err instanceof Error ? err.message : 'Submission failed');
+      setActionError(err instanceof Error ? err.message : 'Evidence submission failed');
     } finally {
       setSubmitting(false);
     }
@@ -624,14 +635,24 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
               </div>
 
               {/* Approve & Submit Evidence Button */}
-              <button
-                onClick={handleOpenEvidenceConfirm}
-                disabled={submitting || Boolean(actionSuccess)}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all flex items-center space-x-2 disabled:opacity-40 disabled:hover:bg-blue-600"
-              >
-                <Send className="w-4 h-4" />
-                <span>Approve and Submit Evidence</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleOpenEvidenceConfirm}
+                  className="px-2.5 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  title="Inspect raw JSON payload before submitting"
+                >
+                  Inspect Payload
+                </button>
+                <button
+                  onClick={handleApproveAndSubmit}
+                  disabled={submitting || Boolean(actionSuccess)}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all flex items-center space-x-2 disabled:opacity-40 disabled:hover:bg-blue-600"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Approve and Submit Evidence</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

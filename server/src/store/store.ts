@@ -62,3 +62,27 @@ export function addOrderRefund(
 
   return order;
 }
+
+export function resetStoreOrderRefunds(): void {
+  const orders = loadStoreOrders(true);
+  for (const o of orders) {
+    if (o.orderId === 'ORD-1006') {
+      o.refunds = [
+        {
+          amount: 50.0,
+          date: '2026-10-24T16:00:00Z',
+          reason: 'Goodwill discount for minor cosmetic scratch on skillet handle',
+        },
+      ];
+    } else {
+      o.refunds = [];
+    }
+  }
+  try {
+    if (fs.existsSync(STORE_FILE)) {
+      fs.writeFileSync(STORE_FILE, JSON.stringify(orders, null, 2), 'utf-8');
+    }
+  } catch (err) {
+    console.error(`[Store] Error resetting store.json:`, err);
+  }
+}

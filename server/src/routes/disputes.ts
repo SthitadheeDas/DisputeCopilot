@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { CONFIG } from '../config.js';
-import { loadFixtureDisputes, findFixtureDisputeById, updateFixtureDispute } from '../store/fixtures.js';
-import { findOrderByTransactionId, loadStoreOrders, addOrderRefund } from '../store/store.js';
+import { loadFixtureDisputes, findFixtureDisputeById, updateFixtureDispute, resetFixtureDisputes } from '../store/fixtures.js';
+import { findOrderByTransactionId, loadStoreOrders, addOrderRefund, resetStoreOrderRefunds } from '../store/store.js';
 import { buildEvidencePack, scoreDispute } from '../scoring/index.js';
-import { getCachedAnalysis, setCachedAnalysis } from '../store/cache.js';
+import { getCachedAnalysis, setCachedAnalysis, resetAnalysisCache } from '../store/cache.js';
 import { getActivityLog, logActivity } from '../store/activity.js';
 import {
   fetchLiveDisputes,
@@ -101,6 +101,25 @@ router.get('/disputes', async (_req, res) => {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('Error fetching disputes:', err);
     res.status(500).json({ error: 'Failed to retrieve disputes', details: message });
+  }
+});
+
+// POST /api/disputes/reset - Reset demo dispute database back to default 6 active disputes
+router.post('/disputes/reset', async (_req, res) => {
+  try {
+    const restored = resetFixtureDisputes();
+    resetStoreOrderRefunds();
+    resetAnalysisCache();
+
+    res.json({
+      success: true,
+      message: 'Demo disputes and store data have been reset to active state.',
+      total: restored.length,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Reset failed';
+    console.error('Error resetting disputes demo data:', err);
+    res.status(500).json({ error: 'Failed to reset demo data', details: message });
   }
 });
 
@@ -202,10 +221,11 @@ router.post('/disputes/:id/submit-evidence', async (req, res) => {
   try {
     const result = await submitPayPalEvidence(id, parsed.data.notes);
 
-    // Update in-memory & file mock state
+    // Update in-memory & file mock state to resolved/defended
     updateFixtureDispute(id, {
-      status: 'UNDER_REVIEW',
-      dispute_state: 'NO_ACTION_REQUIRED',
+      status: 'RESOLVED_DEFENDED',
+      dispute_state: 'RESOLVED',
+      dispute_lifecycle_stage: 'RESOLVED',
     });
 
     const cached = getCachedAnalysis(id);

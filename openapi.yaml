@@ -81,6 +81,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/disputes/reset:
+    post:
+      tags:
+        - Disputes
+      summary: Reset Demo Dispute Database
+      description: Resets mock fixture disputes back to their initial active state (6 active disputes, clearing test concessions/refunds).
+      operationId: resetDisputesDemo
+      responses:
+        '200':
+          description: Mock dispute database successfully reset.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Demo disputes and store data have been reset to active state.
+                  total:
+                    type: integer
+                    example: 6
+        '500':
+          description: Failed to reset demo data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/disputes/{id}:
     get:
       tags:
