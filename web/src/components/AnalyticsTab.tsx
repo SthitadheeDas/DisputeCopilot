@@ -114,11 +114,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           : `TXN-88${d.dispute_id.replace(/[^0-9]/g, '').slice(-4) || '1001'}`;
 
       const dateRaw = d.matchedOrder?.orderedAt || d.create_time;
-      const dateFormatted = new Date(dateRaw).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
+      const dateFormatted = new Date(dateRaw).toUTCString();
 
       const customer =
         d.matchedOrder?.customerName ||
@@ -161,11 +157,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       transactionId: tx.transactionId,
       orderId: tx.orderId,
       date: tx.date,
-      dateFormatted: new Date(tx.date).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }),
+      dateFormatted: new Date(tx.date).toUTCString(),
       customer: tx.customer,
       itemDescription: tx.itemDescription,
       grossAmount: tx.grossAmount,
@@ -254,11 +246,11 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         },
       },
       {
-        headerName: 'Date',
+        headerName: 'Date (GMT)',
         field: 'dateFormatted',
-        width: 135,
+        width: 215,
         cellRenderer: (params: { value: string }) => (
-          <span className="text-xs text-slate-600">{params.value}</span>
+          <span className="text-xs text-slate-600 font-mono">{params.value}</span>
         ),
       },
       {

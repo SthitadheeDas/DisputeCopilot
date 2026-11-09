@@ -29,19 +29,14 @@ export const DisputeTable: React.FC<DisputeTableProps> = ({
 
     let timeLabel = '';
     if (isOverdue) {
-      timeLabel = 'Overdue';
+      timeLabel = 'Overdue (UTC)';
     } else if (days > 0) {
-      timeLabel = `${days}d ${hours}h remaining`;
+      timeLabel = `${days}d ${hours}h remaining (UTC)`;
     } else {
-      timeLabel = `${hours}h remaining`;
+      timeLabel = `${hours}h remaining (UTC)`;
     }
 
-    const formattedDate = new Date(dueDateStr).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const formattedDate = new Date(dueDateStr).toUTCString();
 
     if (isUrgent) {
       return (
@@ -143,7 +138,7 @@ export const DisputeTable: React.FC<DisputeTableProps> = ({
               <th scope="col" className="px-6 py-3.5">Dispute Reason</th>
               <th scope="col" className="px-6 py-3.5">Amount at Stake</th>
               <th scope="col" className="px-6 py-3.5">Evidence Strength</th>
-              <th scope="col" className="px-6 py-3.5">Response Deadline</th>
+              <th scope="col" className="px-6 py-3.5">Response Deadline (GMT)</th>
               <th scope="col" className="px-6 py-3.5 text-right">Actions</th>
             </tr>
           </thead>

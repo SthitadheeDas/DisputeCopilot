@@ -183,14 +183,7 @@ export const ActivityLogView: React.FC<ActivityLogViewProps> = ({ onBack }) => {
             const details = parseActivityDetails(log);
             const IconComponent = details.icon;
             const isRawExpanded = expandedPayloadIds.has(log.id);
-            const formattedDate = new Date(log.timestamp).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-            });
+            const formattedDate = new Date(log.timestamp).toUTCString();
 
             return (
               <div

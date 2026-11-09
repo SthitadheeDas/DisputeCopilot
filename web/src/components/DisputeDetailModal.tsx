@@ -17,6 +17,7 @@ import {
   Sparkles,
   Bot,
   Check,
+  Clock,
 } from 'lucide-react';
 import { EnrichedDispute, EvidenceFact, CachedAIAnalysis } from '../types';
 import { submitEvidence, acceptClaim, makeOffer, analyzeDispute } from '../api';
@@ -253,10 +254,28 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                     <span>DRY RUN MODE</span>
                   </span>
                 )}
+                {/* Deadline Countdown Badge */}
+                <span
+                  className={`text-xs px-2.5 py-0.5 rounded-full font-semibold flex items-center space-x-1 ${
+                    dispute.hoursRemaining <= 48
+                      ? 'bg-rose-100 text-rose-700 border border-rose-200 animate-pulse'
+                      : 'bg-slate-100 text-slate-700 border border-slate-200'
+                  }`}
+                  title="Official PayPal Seller Response Deadline (GMT/UTC)"
+                >
+                  <Clock className="w-3 h-3" />
+                  <span>
+                    {dispute.hoursRemaining > 0
+                      ? `${dispute.hoursRemaining}h remaining (UTC)`
+                      : 'Overdue (UTC)'}
+                  </span>
+                </span>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Reason: <strong className="text-slate-700">{dispute.reason}</strong> | Due:{' '}
-                {new Date(dispute.seller_response_due_date).toLocaleString()}
+                <strong className="text-slate-700 font-mono">
+                  {new Date(dispute.seller_response_due_date).toUTCString()}
+                </strong>
               </p>
             </div>
           </div>
