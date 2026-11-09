@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import {
   ModuleRegistry,
@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { EnrichedDispute } from '../types';
 import { LIFETIME_CLEAN_TRANSACTIONS } from '../data/lifetimeTransactions';
+import { OrderDetailModal } from './OrderDetailModal';
+import { buildOrderDetailViewData, OrderDetailViewData } from '../utils/orderData';
 
 // Register AG Grid Community Modules
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -62,7 +64,13 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 }) => {
   const [filterMode, setFilterMode] = useState<TransactionFilterMode>('all');
   const [quickFilterText, setQuickFilterText] = useState<string>('');
+  const [selectedOrder, setSelectedOrder] = useState<OrderDetailViewData | null>(null);
   const gridRef = useRef<AgGridReact<UnifiedTransactionRow>>(null);
+
+  const handleViewOrder = useCallback((row: UnifiedTransactionRow) => {
+    const orderData = buildOrderDetailViewData(row);
+    setSelectedOrder(orderData);
+  }, []);
 
   // 1. Map disputed transactions from live/fixture disputes
   const disputedRows: UnifiedTransactionRow[] = useMemo(() => {
@@ -286,11 +294,46 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         cellRenderer: (params: { value: string; data?: UnifiedTransactionRow }) => (
           <div className="py-0.5 leading-tight">
             <div className="font-bold text-slate-900 text-xs">{params.value}</div>
-            <div className="text-[11px] text-slate-400 font-mono">
-              {params.data?.orderId} &bull; {params.data?.itemDescription?.slice(0, 22)}...
+            <div className="text-[11px] text-slate-400 font-mono flex items-center space-x-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (params.data) handleViewOrder(params.data);
+                }}
+                className="hover:text-blue-600 hover:underline cursor-pointer font-bold text-slate-500"
+                title="Click to view order"
+              >
+                {params.data?.orderId}
+              </button>
+              <span>&bull;</span>
+              <span className="truncate max-w-[85px]">{params.data?.itemDescription}</span>
             </div>
           </div>
         ),
+      },
+      {
+        headerName: 'Order Details',
+        field: 'orderId',
+        width: 135,
+        cellRenderer: (params: { data?: UnifiedTransactionRow }) => {
+          if (!params.data) return null;
+          return (
+            <div className="pt-0.5">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (params.data) {
+                    handleViewOrder(params.data);
+                  }
+                }}
+                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+                title={`View order details for ${params.data.orderId}`}
+              >
+                <span>🔍 View Order</span>
+              </button>
+            </div>
+          );
+        },
       },
       {
         headerName: 'Gross Amount ($)',
@@ -473,11 +516,13 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     }
 
     return baseCols;
-  }, [filterMode, onSelectDispute]);
+  }, [filterMode, onSelectDispute, handleViewOrder]);
 
   const onRowClicked = (event: RowClickedEvent<UnifiedTransactionRow>) => {
-    if (event.data?.rawDispute) {
+    if (event.data?.rawDispute && filterMode === 'disputed') {
       onSelectDispute(event.data.rawDispute);
+    } else if (event.data) {
+      handleViewOrder(event.data);
     }
   };
 
@@ -737,6 +782,15 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 3. Order Detail Preview Modal */}
+      {selectedOrder && (
+        <OrderDetailModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onReviewDispute={onSelectDispute}
+        />
+      )}
     </div>
   );
 };

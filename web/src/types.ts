@@ -49,6 +49,7 @@ export interface StoreOrder {
   currency: string;
   orderedAt?: string;
   shippingAddress: {
+    recipientName?: string;
     line1: string;
     city: string;
     state: string;
