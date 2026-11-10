@@ -117,7 +117,12 @@ export async function analyzeDisputeWithGemini(
   }
 
   const ai = new GoogleGenAI({ apiKey: CONFIG.gemini.apiKey });
-  const modelName = CONFIG.gemini.model || 'gemini-2.5-flash';
+  const configuredModel = CONFIG.gemini.model || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const modelName =
+    configuredModel &&
+    !['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'].includes(configuredModel)
+      ? configuredModel
+      : 'gemini-3.8-flash';
 
   const responseSchema = {
     type: Type.OBJECT,
@@ -156,17 +161,42 @@ export async function analyzeDisputeWithGemini(
     });
 
     const apiPromise = (async () => {
-      const response = await ai.models.generateContent({
-        model: modelName,
-        contents: prompt,
-        config: {
-          temperature: 0.1,
-          responseMimeType: 'application/json',
-          responseSchema,
-        },
-      });
-      const text = response.text || '{}';
-      return JSON.parse(text) as AIAnalysisOutput;
+      let lastErr: unknown;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+              temperature: 0.1,
+              responseMimeType: 'application/json',
+              responseSchema,
+            },
+          });
+          const text = response.text || '{}';
+          return JSON.parse(text) as AIAnalysisOutput;
+        } catch (err: unknown) {
+          lastErr = err;
+          const errMsg = err instanceof Error ? err.message : String(err);
+          const is503 =
+            errMsg.includes('503') ||
+            errMsg.toUpperCase().includes('UNAVAILABLE') ||
+            (typeof err === 'object' &&
+              err !== null &&
+              (('status' in err && (err as { status: unknown }).status === 503) ||
+                ('code' in err && (err as { code: unknown }).code === 503)));
+
+          if (attempt === 1 && is503) {
+            console.warn(
+              `[Gemini] Model ${modelName} returned 503 UNAVAILABLE on attempt 1. Pausing 2000ms before retry...`
+            );
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            continue;
+          }
+          throw err;
+        }
+      }
+      throw lastErr;
     })();
 
     try {

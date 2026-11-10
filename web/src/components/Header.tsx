@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, Database, History, RefreshCw, Zap, BarChart3, RotateCcw } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Database, History, Zap, BarChart3, RotateCcw } from 'lucide-react';
 import { DataMode } from '../types';
 
 interface HeaderProps {
@@ -7,8 +7,8 @@ interface HeaderProps {
   dryRun: boolean;
   activeTab: 'disputes' | 'analytics' | 'activity';
   setActiveTab: (tab: 'disputes' | 'analytics' | 'activity') => void;
-  onRefresh: () => void;
-  refreshing: boolean;
+  onRefresh?: () => void;
+  refreshing?: boolean;
   onResetDemoData?: () => void;
   resetting?: boolean;
 }
@@ -18,8 +18,6 @@ export const Header: React.FC<HeaderProps> = ({
   dryRun,
   activeTab,
   setActiveTab,
-  onRefresh,
-  refreshing,
   onResetDemoData,
   resetting = false,
 }) => {
@@ -83,16 +81,6 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </nav>
 
-            {/* Refresh Button */}
-            <button
-              onClick={onRefresh}
-              disabled={refreshing}
-              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
-              title="Refresh data"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
-            </button>
-
             {/* Status Badges */}
             <div className="flex items-center space-x-2 pl-2 border-l border-slate-200">
               {/* Mandatory Data Source Badge */}
@@ -138,11 +126,11 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   onClick={onResetDemoData}
                   disabled={resetting}
-                  className="flex items-center space-x-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 hover:border-slate-400 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer shadow-2xs disabled:opacity-50"
-                  title="Reset mock dispute database back to default 6 active disputes"
+                  className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200 cursor-pointer disabled:opacity-50"
+                  title="Reset demo data back to default 6 active disputes"
+                  aria-label="Reset demo data"
                 >
-                  <RotateCcw className={`w-3 h-3 text-slate-600 ${resetting ? 'animate-spin' : ''}`} />
-                  <span>↻ Reset Demo Data</span>
+                  <RotateCcw className={`w-4 h-4 text-slate-600 ${resetting ? 'animate-spin text-blue-600' : ''}`} />
                 </button>
               )}
             </div>

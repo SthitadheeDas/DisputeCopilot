@@ -105,7 +105,7 @@ PAYPAL_BASE_URL=https://api-m.sandbox.paypal.com
 
 # Google Gemini API Key (from aistudio.google.com)
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.8-flash
 
 # Application Mode: 'fixture' (offline) or 'sandbox' (live PayPal API)
 DATA_MODE=fixture
@@ -193,7 +193,7 @@ Dispute Copilot is structured to deploy as a single **Web Service** on [Render](
    - `PAYPAL_CLIENT_SECRET`: `[Your PayPal Client Secret]`
    - `PAYPAL_BASE_URL`: `https://api-m.sandbox.paypal.com`
    - `GEMINI_API_KEY`: `[Your Gemini API Key]`
-   - `GEMINI_MODEL`: `gemini-2.5-flash`
+   - `GEMINI_MODEL`: `gemini-3.8-flash`
    - `PORT`: `10000` (Render's default)
 4. Click **Create Web Service**.
 
