@@ -87,6 +87,9 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       const isResolved =
         statusUpper === 'RESOLVED' ||
         statusUpper === 'RESOLVED_ACCEPTED' ||
+        statusUpper === 'RESOLVED_DEFENDED' ||
+        statusUpper === 'SUBMITTED' ||
+        statusUpper === 'REFUNDED' ||
         statusUpper === 'CONCEDED' ||
         statusUpper === 'CLOSED' ||
         lifecycleUpper === 'RESOLVED' ||
@@ -103,6 +106,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       if (
         statusUpper === 'CONCEDED' ||
         statusUpper === 'RESOLVED_ACCEPTED' ||
+        (statusUpper === 'RESOLVED' && aiRec === 'accept') ||
         aiRec === 'accept' ||
         (!aiRec && score < 40 && isResolved)
       ) {
@@ -112,6 +116,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         moneyGained = 0;
         moneyLost = stake + PAYPAL_DISPUTE_FEE;
       } else if (
+        statusUpper === 'REFUNDED' ||
         aiRec === 'partial_offer' ||
         (!aiRec && score >= 40 && score < 70 && (d.matchedOrder?.refunds?.length ?? 0) > 0)
       ) {

@@ -6,7 +6,7 @@ import { ActivityLogView } from './components/ActivityLogView';
 import { AnalyticsTab } from './components/AnalyticsTab';
 import { fetchDisputes, fetchHealth } from './api';
 import { EnrichedDispute, DataMode } from './types';
-import { ShieldCheck, AlertTriangle, DollarSign, Clock, RefreshCw } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, DollarSign, Clock, RefreshCw, CheckCircle2 } from 'lucide-react';
 
 // Active dispute check: Filters out resolved, conceded, or closed claims
 export const isDisputeActive = (d: EnrichedDispute): boolean => {
@@ -18,6 +18,8 @@ export const isDisputeActive = (d: EnrichedDispute): boolean => {
     status === 'RESOLVED' ||
     status === 'RESOLVED_ACCEPTED' ||
     status === 'RESOLVED_DEFENDED' ||
+    status === 'SUBMITTED' ||
+    status === 'REFUNDED' ||
     status === 'DEFENDED' ||
     status === 'CONCEDED' ||
     status === 'CLOSED' ||
@@ -40,6 +42,7 @@ export const App: React.FC = () => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [resetting, setResetting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [actionToast, setActionToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
   const [activeTab, setActiveTab] = useState<'disputes' | 'analytics' | 'activity'>('disputes');
   const [selectedDispute, setSelectedDispute] = useState<EnrichedDispute | null>(null);
@@ -65,11 +68,15 @@ export const App: React.FC = () => {
 
       setDisputes(res.disputes);
 
-      // Keep selectedDispute updated if modal is open
-      if (selectedDispute) {
-        const updated = res.disputes.find((d) => d.dispute_id === selectedDispute.dispute_id);
-        if (updated) setSelectedDispute(updated);
-      }
+      // Keep selectedDispute updated only if modal is open and dispute is still active
+      setSelectedDispute((prev) => {
+        if (!prev) return null;
+        const updated = res.disputes.find((d) => d.dispute_id === prev.dispute_id);
+        if (updated && isDisputeActive(updated)) {
+          return updated;
+        }
+        return null;
+      });
     } catch (err: unknown) {
       console.error('Error loading disputes:', err);
       setError(err instanceof Error ? err.message : 'Failed to connect to backend server');
@@ -77,7 +84,44 @@ export const App: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedDispute]);
+  }, []);
+
+  const handleActionComplete = useCallback(
+    async (updatedStatus: 'SUBMITTED' | 'RESOLVED' | 'REFUNDED', disputeId: string) => {
+      // 1. Immediately update global dispute store so Disputes List and Analytics Dashboard reflect the new status
+      setDisputes((prevDisputes) =>
+        prevDisputes.map((d) => {
+          if (d.dispute_id !== disputeId) return d;
+          return {
+            ...d,
+            status: updatedStatus,
+            dispute_state: 'RESOLVED',
+            dispute_lifecycle_stage: 'RESOLVED',
+          };
+        })
+      );
+
+      // Ensure selectedDispute remains null
+      setSelectedDispute(null);
+
+      // Show instant feedback toast
+      const statusLabel =
+        updatedStatus === 'SUBMITTED'
+          ? 'Evidence submitted & defended successfully'
+          : updatedStatus === 'REFUNDED'
+          ? 'Settlement refund offer submitted successfully'
+          : 'Claim accepted and resolved';
+      setActionToast({
+        message: `Dispute ${disputeId}: ${statusLabel}.`,
+        type: 'success',
+      });
+      setTimeout(() => setActionToast(null), 5000);
+
+      // 2. Sync fresh data from the server
+      await loadData(true);
+    },
+    [loadData]
+  );
 
   const handleResetDemoData = useCallback(async () => {
     setResetting(true);
@@ -138,6 +182,20 @@ export const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {actionToast && (
+          <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl flex items-center justify-between shadow-xs animate-in fade-in duration-200">
+            <div className="flex items-center space-x-2 text-sm font-semibold">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span>{actionToast.message}</span>
+            </div>
+            <button
+              onClick={() => setActionToast(null)}
+              className="text-xs text-emerald-700 hover:text-emerald-900 font-medium px-2 py-1 rounded-lg hover:bg-emerald-100 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         {activeTab === 'activity' ? (
           <ActivityLogView onBack={() => setActiveTab('disputes')} />
         ) : activeTab === 'analytics' ? (
@@ -259,7 +317,7 @@ export const App: React.FC = () => {
           dispute={selectedDispute}
           dryRun={dryRun}
           onClose={() => setSelectedDispute(null)}
-          onActionComplete={() => loadData(true)}
+          onActionComplete={handleActionComplete}
         />
       )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   X,
   ShieldCheck,
@@ -26,7 +26,7 @@ interface DisputeDetailModalProps {
   dispute: EnrichedDispute;
   dryRun: boolean;
   onClose: () => void;
-  onActionComplete: () => void;
+  onActionComplete: (updatedStatus: 'SUBMITTED' | 'RESOLVED' | 'REFUNDED', disputeId: string) => void;
 }
 
 export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
@@ -80,6 +80,10 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
   const [draftNotes, setDraftNotes] = useState<string>('');
   const [citedFactIds, setCitedFactIds] = useState<string[]>([]);
 
+  // Closing guards to prevent any auto-trigger re-run if modal is closing or dispute is null
+  const isClosingRef = useRef<boolean>(false);
+  const initializedDisputeIdRef = useRef<string | null>(null);
+
   // Partial offer state
   const [showOfferInput, setShowOfferInput] = useState(false);
   const [offerAmount, setOfferAmount] = useState<string>(
@@ -88,12 +92,15 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
 
   // Payload modal state
   const [confirmPayloadModal, setConfirmPayloadModal] = useState<Record<string, unknown> | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   // 3-Tier Fallback Chain execution: Tier 1 (Groq) -> Tier 2 (Gemini) -> Tier 3 (Grounded Rule Engine)
   const executeAIFallbackChain = useCallback(async () => {
+    // Guard against running if closing or dispute is missing
+    if (isClosingRef.current || !dispute || !dispute.dispute_id) {
+      return;
+    }
+
     setIsGenerating(true);
     setActionError(null);
     setDraftNotes('');
@@ -103,6 +110,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
     try {
       // Backend cascade: Tier 1 (Groq openai/gpt-oss-120b) -> Tier 2 (Gemini Flash AI) -> Tier 3 (Grounded Rule Engine)
       const res = await analyzeDispute(dispute.dispute_id);
+      if (isClosingRef.current) return;
       if (res && res.analysis) {
         setAiAnalysis(res.analysis);
         setDraftNotes(res.analysis.draftNotes || '');
@@ -114,6 +122,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
       }
       throw new Error('Analysis response was empty');
     } catch (err: unknown) {
+      if (isClosingRef.current) return;
       console.warn('[AI Pipeline] Backend call failed, executing client-side Tier 3 Grounded Rule Engine fallback:', err);
       // Client-side Tier 3 Grounded Rule Engine Fallback
       const fallbackDraft = generateInitialDraft();
@@ -141,14 +150,25 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
       setDraftNotes(fallbackDraft.text);
       setCitedFactIds(fallbackDraft.citedIds);
     } finally {
-      setIsGenerating(false);
+      if (!isClosingRef.current) {
+        setIsGenerating(false);
+      }
     }
   }, [dispute]);
 
   // Auto-trigger 3-tier cascade on modal mount
   useEffect(() => {
+    // Guard: Do not run if closing or dispute is null
+    if (isClosingRef.current || !dispute || !dispute.dispute_id) {
+      return;
+    }
+    // Prevent duplicate re-triggering for the same dispute ID
+    if (initializedDisputeIdRef.current === dispute.dispute_id) {
+      return;
+    }
+    initializedDisputeIdRef.current = dispute.dispute_id;
     executeAIFallbackChain();
-  }, [executeAIFallbackChain]);
+  }, [dispute?.dispute_id, executeAIFallbackChain]);
 
   const renderAIProviderBadge = () => {
     if (isGenerating) {
@@ -242,6 +262,11 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
     setConfirmPayloadModal(payload);
   };
 
+  const handleClose = () => {
+    isClosingRef.current = true;
+    onClose();
+  };
+
   const handleApproveAndSubmit = async () => {
     if (
       !window.confirm(
@@ -254,20 +279,20 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
   };
 
   const handleExecuteEvidenceSubmit = async () => {
-    setSubmitting(true);
-    setActionError(null);
+    const disputeId = dispute.dispute_id;
+    const notesToSubmit = draftNotes;
+    setConfirmPayloadModal(null);
+
+    // 1. Modal Closing Sequence: execute onClose() FIRST before making the API submission call
+    isClosingRef.current = true;
+    onClose();
+
     try {
-      const res = await submitEvidence(dispute.dispute_id, draftNotes);
-      setActionSuccess(res.message || 'Evidence submitted successfully to PayPal.');
-      setConfirmPayloadModal(null);
-      onActionComplete();
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      await submitEvidence(disputeId, notesToSubmit);
+      // 3. State Sync: update global dispute store after API call completes
+      onActionComplete('SUBMITTED', disputeId);
     } catch (err: unknown) {
-      setActionError(err instanceof Error ? err.message : 'Evidence submission failed');
-    } finally {
-      setSubmitting(false);
+      console.error(`Failed to submit evidence for dispute ${disputeId}:`, err);
     }
   };
 
@@ -275,19 +300,18 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
     if (!window.confirm('Are you sure you want to accept this claim and concede liability?')) {
       return;
     }
-    setSubmitting(true);
-    setActionError(null);
+    const disputeId = dispute.dispute_id;
+
+    // 1. Modal Closing Sequence: execute onClose() FIRST before making the API submission call
+    isClosingRef.current = true;
+    onClose();
+
     try {
-      const res = await acceptClaim(dispute.dispute_id);
-      setActionSuccess(res.message || 'Claim accepted and liability conceded.');
-      onActionComplete();
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      await acceptClaim(disputeId);
+      // 3. State Sync: update global dispute store after API call completes
+      onActionComplete('RESOLVED', disputeId);
     } catch (err: unknown) {
-      setActionError(err instanceof Error ? err.message : 'Accept claim failed');
-    } finally {
-      setSubmitting(false);
+      console.error(`Failed to accept claim for dispute ${disputeId}:`, err);
     }
   };
 
@@ -297,24 +321,23 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
       alert('Please enter a valid positive offer amount.');
       return;
     }
-    setSubmitting(true);
-    setActionError(null);
+    const disputeId = dispute.dispute_id;
+    setShowOfferInput(false);
+
+    // 1. Modal Closing Sequence: execute onClose() FIRST before making the API submission call
+    isClosingRef.current = true;
+    onClose();
+
     try {
-      const res = await makeOffer(
-        dispute.dispute_id,
+      await makeOffer(
+        disputeId,
         amt,
         'Merchant partial refund goodwill offer'
       );
-      setActionSuccess(res.message || 'Settlement offer submitted successfully.');
-      setShowOfferInput(false);
-      onActionComplete();
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      // 3. State Sync: update global dispute store after API call completes
+      onActionComplete('REFUNDED', disputeId);
     } catch (err: unknown) {
-      setActionError(err instanceof Error ? err.message : 'Offer submission failed');
-    } finally {
-      setSubmitting(false);
+      console.error(`Failed to submit offer for dispute ${disputeId}:`, err);
     }
   };
 
@@ -369,7 +392,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
           </div>
 
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
           >
             <X className="w-5 h-5" />
@@ -377,17 +400,6 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
         </div>
 
         {/* Action feedback banners */}
-        {actionSuccess && (
-          <div className="bg-emerald-50 border-b border-emerald-200 px-6 py-3 flex items-center justify-between text-sm text-emerald-800 animate-in fade-in duration-200">
-            <div className="flex items-center space-x-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>{actionSuccess}</span>
-            </div>
-            <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-200">
-              Auto-closing...
-            </span>
-          </div>
-        )}
         {actionError && (
           <div className="bg-rose-50 border-b border-rose-200 px-6 py-3 flex items-center space-x-2 text-sm text-rose-800">
             <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
@@ -537,7 +549,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
 
                 <button
                   onClick={executeAIFallbackChain}
-                  disabled={isGenerating || submitting || Boolean(actionSuccess)}
+                  disabled={isGenerating}
                   className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition-colors disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
@@ -681,9 +693,8 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                   value={draftNotes}
                   onChange={(e) => setDraftNotes(e.target.value)}
                   rows={5}
-                  disabled={Boolean(actionSuccess)}
                   placeholder="Defense draft will appear here..."
-                  className="w-full text-xs font-mono p-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-hidden transition-all text-slate-800 leading-relaxed disabled:bg-slate-100 disabled:text-slate-500 shadow-2xs"
+                  className="w-full text-xs font-mono p-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-hidden transition-all text-slate-800 leading-relaxed shadow-2xs"
                 />
               )}
             </div>
@@ -718,7 +729,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                   </div>
                   <button
                     onClick={handleSendOffer}
-                    disabled={submitting}
+                    disabled={isGenerating}
                     className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shadow-xs disabled:opacity-50"
                   >
                     Submit Offer
@@ -733,7 +744,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                 {/* Accept Claim Button */}
                 <button
                   onClick={handleAcceptClaim}
-                  disabled={isGenerating || submitting || Boolean(actionSuccess)}
+                  disabled={isGenerating}
                   className="px-3 py-2 rounded-xl text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors disabled:opacity-40"
                 >
                   Accept Claim
@@ -743,7 +754,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                 {!showOfferInput && (
                   <button
                     onClick={() => setShowOfferInput(true)}
-                    disabled={isGenerating || submitting || Boolean(actionSuccess)}
+                    disabled={isGenerating}
                     className="px-3 py-2 rounded-xl text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors disabled:opacity-40"
                   >
                     Offer Partial Refund
@@ -756,7 +767,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                 <button
                   type="button"
                   onClick={handleOpenEvidenceConfirm}
-                  disabled={isGenerating || submitting || Boolean(actionSuccess) || !draftNotes.trim()}
+                  disabled={isGenerating || !draftNotes.trim()}
                   className="px-2.5 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-40"
                   title="Inspect raw JSON payload before submitting"
                 >
@@ -764,7 +775,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                 </button>
                 <button
                   onClick={handleApproveAndSubmit}
-                  disabled={isGenerating || submitting || Boolean(actionSuccess) || !draftNotes.trim()}
+                  disabled={isGenerating || !draftNotes.trim()}
                   className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all flex items-center space-x-2 disabled:opacity-40 disabled:hover:bg-blue-600"
                 >
                   <Send className="w-4 h-4" />
@@ -808,17 +819,16 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
             <div className="flex items-center justify-end space-x-3 pt-2">
               <button
                 onClick={() => setConfirmPayloadModal(null)}
-                disabled={submitting}
                 className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-900 font-medium"
               >
                 Back to Edit
               </button>
               <button
                 onClick={handleExecuteEvidenceSubmit}
-                disabled={submitting}
+                disabled={isGenerating}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center space-x-1.5 disabled:opacity-50"
               >
-                {submitting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                <Send className="w-3.5 h-3.5" />
                 <span>Confirm & Submit to PayPal</span>
               </button>
             </div>
