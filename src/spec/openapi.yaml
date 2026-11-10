@@ -51,8 +51,10 @@ paths:
                 dataMode: sandbox
                 dryRun: true
                 geminiModel: gemini-3.8-flash
+                groqModel: openai/gpt-oss-120b
                 hasPayPalCredentials: true
                 hasGeminiKey: true
+                hasGroqKey: true
                 ordersCount: 6
                 disputesCount: 6
                 timestamp: '2026-11-08T04:38:00.000Z'
@@ -349,10 +351,16 @@ components:
         geminiModel:
           type: string
           example: gemini-3.8-flash
+        groqModel:
+          type: string
+          example: openai/gpt-oss-120b
         hasPayPalCredentials:
           type: boolean
           example: true
         hasGeminiKey:
+          type: boolean
+          example: true
+        hasGroqKey:
           type: boolean
           example: true
         ordersCount:

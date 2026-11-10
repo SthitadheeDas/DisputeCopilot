@@ -458,9 +458,13 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                      <span>Gemini AI Strategy Copilot</span>
+                      <span>AI Strategy Copilot</span>
                       {aiAnalysis && (
-                        aiAnalysis.source === 'fallback' ? (
+                        aiAnalysis.source === 'groq' ? (
+                          <span className="text-[10px] bg-orange-100 text-orange-800 border border-orange-200 font-bold px-2 py-0.5 rounded-full">
+                            Groq AI ({aiAnalysis.model || 'Primary'})
+                          </span>
+                        ) : aiAnalysis.source === 'fallback' ? (
                           <span className="text-[10px] bg-amber-100 text-amber-800 border border-amber-200 font-bold px-2 py-0.5 rounded-full">
                             Fallback Engine
                           </span>

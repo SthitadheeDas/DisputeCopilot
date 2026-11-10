@@ -45,6 +45,10 @@ export const CONFIG = {
     clientSecret: process.env.PAYPAL_CLIENT_SECRET || '',
     baseUrl: process.env.PAYPAL_BASE_URL || 'https://api-m.sandbox.paypal.com',
   },
+  groq: {
+    apiKey: process.env.GROQ_API_KEY || '',
+    model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+  },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '',
     model:

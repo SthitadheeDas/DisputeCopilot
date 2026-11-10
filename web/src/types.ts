@@ -74,7 +74,8 @@ export interface CachedAIAnalysis {
   citedFactIds: string[];
   generatedAt: string;
   needsReview?: boolean;
-  source?: 'gemini' | 'fallback';
+  source?: 'groq' | 'gemini' | 'fallback';
+  model?: string;
 }
 
 export interface EnrichedDispute {

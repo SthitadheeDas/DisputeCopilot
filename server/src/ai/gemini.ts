@@ -6,6 +6,7 @@ import {
   ScoreResult,
 } from '../types/dispute.js';
 import { CachedAIAnalysis, getCachedAnalysis, setCachedAnalysis } from '../store/cache.js';
+import { generateGroqAnalysis } from './groq.js';
 
 export interface AIAnalysisOutput {
   summary: string;
@@ -14,13 +15,13 @@ export interface AIAnalysisOutput {
   draftNotes: string;
   citedFactIds: string[];
   needsReview?: boolean;
-  source?: 'gemini' | 'fallback';
+  source?: 'groq' | 'gemini' | 'fallback';
 }
 
 /**
  * Validates that all fact IDs cited by the model exist in the evidence pack.
  */
-function validateCitations(
+export function validateCitations(
   citedFactIds: string[],
   evidencePack: EvidencePack
 ): { valid: boolean; invalidIds: string[] } {
@@ -33,9 +34,9 @@ function validateCitations(
 }
 
 /**
- * Builds the strict, grounded system and user prompt for Gemini.
+ * Builds the strict, grounded system and user prompt for Gemini / Groq.
  */
-function buildPrompt(
+export function buildPrompt(
   dispute: PayPalDispute,
   evidencePack: EvidencePack,
   scoreResult: ScoreResult,
@@ -87,33 +88,16 @@ Provide your output as structured JSON matching the requested schema.`;
 }
 
 /**
- * Generates an AI analysis and drafted evidence response using Gemini.
- * Caches the result in data/analysis-cache.json.
+ * Calls Gemini 3.8 Flash with 503 retry handling and citation self-correction.
  */
-export async function analyzeDisputeWithGemini(
+async function callGeminiModel(
   dispute: PayPalDispute,
   evidencePack: EvidencePack,
-  scoreResult: ScoreResult,
-  forceRefresh = false
+  scoreResult: ScoreResult
 ): Promise<CachedAIAnalysis> {
   const disputeId = dispute.dispute_id;
-
-  // 1. Check local cache first unless force refresh requested
-  if (!forceRefresh) {
-    const cached = getCachedAnalysis(disputeId);
-    if (cached) {
-      return cached;
-    }
-  }
-
-  // 2. Fallback rule-based analysis if no Gemini API key configured
   if (!CONFIG.gemini.apiKey) {
-    console.warn('[Gemini] GEMINI_API_KEY is not set. Generating grounded deterministic draft.');
-    const fallback = generateFallbackAnalysis(dispute, evidencePack, scoreResult);
-    fallback.needsReview = true;
-    fallback.source = 'fallback';
-    setCachedAnalysis(fallback);
-    return fallback;
+    throw new Error('GEMINI_API_KEY is not configured');
   }
 
   const ai = new GoogleGenAI({ apiKey: CONFIG.gemini.apiKey });
@@ -207,58 +191,113 @@ export async function analyzeDisputeWithGemini(
     }
   };
 
-  try {
-    // First generation attempt
-    let rawResult = await callModelWithTimeout(buildPrompt(dispute, evidencePack, scoreResult));
-    let citationCheck = validateCitations(rawResult.citedFactIds || [], evidencePack);
+  // First generation attempt
+  let rawResult = await callModelWithTimeout(buildPrompt(dispute, evidencePack, scoreResult));
+  let citationCheck = validateCitations(rawResult.citedFactIds || [], evidencePack);
 
-    // If citations invalid, retry once with explicit corrective feedback
-    if (!citationCheck.valid) {
-      console.warn(
-        `[Gemini] Invalid citation fact IDs detected (${citationCheck.invalidIds.join(', ')}). Retrying once with corrective instruction.`
-      );
-      const correction = `PREVIOUS OUTPUT ERROR: You cited fact IDs [${citationCheck.invalidIds.join(', ')}] which DO NOT exist in the Evidence Pack. You may ONLY cite valid IDs from: ${evidencePack.facts.map((f) => f.id).join(', ')}.`;
-      rawResult = await callModelWithTimeout(
-        buildPrompt(dispute, evidencePack, scoreResult, correction)
-      );
-      citationCheck = validateCitations(rawResult.citedFactIds || [], evidencePack);
-    }
-
-    const needsReview = !citationCheck.valid;
-    // Clean up citedFactIds to only retain valid IDs from the pack
-    const validSet = new Set(evidencePack.facts.map((f) => f.id));
-    const safeCitedIds = (rawResult.citedFactIds || []).filter((id) => validSet.has(id));
-
-    const finalAnalysis: CachedAIAnalysis = {
-      disputeId,
-      summary: rawResult.summary,
-      recommendation: rawResult.recommendation,
-      recommendedOfferAmount: rawResult.recommendedOfferAmount,
-      draftNotes: rawResult.draftNotes,
-      citedFactIds: safeCitedIds,
-      generatedAt: new Date().toISOString(),
-      needsReview,
-      source: 'gemini',
-    };
-
-    // Cache the result
-    setCachedAnalysis(finalAnalysis);
-    return finalAnalysis;
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`[Gemini] Model ${modelName} request unsuccessful (${msg}). Using grounded fallback generator.`);
-    const fallback = generateFallbackAnalysis(dispute, evidencePack, scoreResult);
-    fallback.needsReview = true;
-    fallback.source = 'fallback';
-    setCachedAnalysis(fallback);
-    return fallback;
+  // If citations invalid, retry once with explicit corrective feedback
+  if (!citationCheck.valid) {
+    console.warn(
+      `[Gemini] Invalid citation fact IDs detected (${citationCheck.invalidIds.join(', ')}). Retrying once with corrective instruction.`
+    );
+    const correction = `PREVIOUS OUTPUT ERROR: You cited fact IDs [${citationCheck.invalidIds.join(', ')}] which DO NOT exist in the Evidence Pack. You may ONLY cite valid IDs from: ${evidencePack.facts.map((f) => f.id).join(', ')}.`;
+    rawResult = await callModelWithTimeout(
+      buildPrompt(dispute, evidencePack, scoreResult, correction)
+    );
+    citationCheck = validateCitations(rawResult.citedFactIds || [], evidencePack);
   }
+
+  const needsReview = !citationCheck.valid;
+  const validSet = new Set(evidencePack.facts.map((f) => f.id));
+  const safeCitedIds = (rawResult.citedFactIds || []).filter((id) => validSet.has(id));
+
+  return {
+    disputeId,
+    summary: rawResult.summary,
+    recommendation: rawResult.recommendation,
+    recommendedOfferAmount: rawResult.recommendedOfferAmount,
+    draftNotes: rawResult.draftNotes,
+    citedFactIds: safeCitedIds,
+    generatedAt: new Date().toISOString(),
+    needsReview,
+    source: 'gemini',
+    model: modelName,
+  };
 }
 
 /**
- * Grounded fallback generator when Gemini is offline, times out, or rate limited.
+ * 3-Tier AI Dispute Defense Pipeline:
+ * 1. Primary: Groq (openai/gpt-oss-120b or llama-3.3-70b-versatile)
+ * 2. Secondary Fallback: Gemini 3.8 Flash (with 503 retry)
+ * 3. Final Fallback: Grounded Rule Engine
  */
-function generateFallbackAnalysis(
+export async function analyzeDisputeWithGemini(
+  dispute: PayPalDispute,
+  evidencePack: EvidencePack,
+  scoreResult: ScoreResult,
+  forceRefresh = false
+): Promise<CachedAIAnalysis> {
+  const disputeId = dispute.dispute_id;
+
+  // 1. Check local cache first unless force refresh requested
+  if (!forceRefresh) {
+    const cached = getCachedAnalysis(disputeId);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  // Tier 1: Try Primary Provider (Groq)
+  if (CONFIG.groq.apiKey) {
+    try {
+      const groqResult = await generateGroqAnalysis(dispute, evidencePack, scoreResult);
+      const analysis: CachedAIAnalysis = {
+        disputeId,
+        summary: groqResult.analysis.summary,
+        recommendation: groqResult.analysis.recommendation,
+        recommendedOfferAmount: groqResult.analysis.recommendedOfferAmount,
+        draftNotes: groqResult.analysis.draftNotes,
+        citedFactIds: groqResult.analysis.citedFactIds,
+        generatedAt: new Date().toISOString(),
+        needsReview: groqResult.analysis.needsReview ?? false,
+        source: 'groq',
+        model: groqResult.modelUsed,
+      };
+      setCachedAnalysis(analysis);
+      return analysis;
+    } catch (groqErr: unknown) {
+      const msg = groqErr instanceof Error ? groqErr.message : String(groqErr);
+      console.warn(`[AI Pipeline] Primary provider Groq failed (${msg}). Falling back to Gemini 3.8 Flash...`);
+    }
+  }
+
+  // Tier 2: Try Secondary Fallback (Gemini 3.8 Flash)
+  if (CONFIG.gemini.apiKey) {
+    try {
+      const geminiAnalysis = await callGeminiModel(dispute, evidencePack, scoreResult);
+      setCachedAnalysis(geminiAnalysis);
+      return geminiAnalysis;
+    } catch (geminiErr: unknown) {
+      const msg = geminiErr instanceof Error ? geminiErr.message : String(geminiErr);
+      console.warn(`[AI Pipeline] Secondary provider Gemini failed (${msg}). Falling back to Grounded Rule Engine...`);
+    }
+  }
+
+  // Tier 3: Local Grounded Rule Engine Fallback
+  console.warn(`[AI Pipeline] Using Grounded Rule Engine for dispute ${disputeId}.`);
+  const fallback = generateFallbackAnalysis(dispute, evidencePack, scoreResult);
+  fallback.needsReview = true;
+  fallback.source = 'fallback';
+  setCachedAnalysis(fallback);
+  return fallback;
+}
+
+export const analyzeDisputeWithAI = analyzeDisputeWithGemini;
+
+/**
+ * Grounded fallback generator when Groq & Gemini are offline, timed out, or rate limited.
+ */
+export function generateFallbackAnalysis(
   dispute: PayPalDispute,
   evidencePack: EvidencePack,
   scoreResult: ScoreResult

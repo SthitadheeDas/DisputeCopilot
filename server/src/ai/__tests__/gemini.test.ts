@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { analyzeDisputeWithGemini } from '../gemini.js';
+import { describe, it, expect } from 'vitest';
+import { analyzeDisputeWithGemini, analyzeDisputeWithAI, buildPrompt, validateCitations } from '../gemini.js';
 import { getCachedAnalysis, setCachedAnalysis } from '../../store/cache.js';
 import { EvidencePack, PayPalDispute, ScoreResult } from '../../types/dispute.js';
 
@@ -114,5 +114,32 @@ describe('AI Citation & Analysis Verification', () => {
     const analysis = await analyzeDisputeWithGemini(mediumDispute, sampleEvidencePack, mediumScore, true);
     expect(analysis.recommendation).toBe('partial_offer');
     expect(analysis.recommendedOfferAmount).toBeGreaterThan(0);
+  });
+
+  it('validates citations correctly and catches hallucinated fact IDs', () => {
+    const valid = validateCitations(['F1', 'F2', 'F3'], sampleEvidencePack);
+    expect(valid.valid).toBe(true);
+    expect(valid.invalidIds.length).toBe(0);
+
+    const invalid = validateCitations(['F1', 'F99', 'HALLUCINATED'], sampleEvidencePack);
+    expect(invalid.valid).toBe(false);
+    expect(invalid.invalidIds).toContain('F99');
+    expect(invalid.invalidIds).toContain('HALLUCINATED');
+  });
+
+  it('buildPrompt produces grounded instructions containing all facts and rubric items', () => {
+    const prompt = buildPrompt(sampleDispute, sampleEvidencePack, sampleScore);
+    expect(prompt).toContain('Dispute ID: PP-D-AI-TEST-1');
+    expect(prompt).toContain('[F1]');
+    expect(prompt).toContain('[F2]');
+    expect(prompt).toContain('100/100');
+    expect(prompt).toContain('STRICT FACTUAL GROUNDING RULES');
+  });
+
+  it('analyzeDisputeWithAI acts as an alias to analyzeDisputeWithGemini with 3-tier cascade', async () => {
+    const analysis = await analyzeDisputeWithAI(sampleDispute, sampleEvidencePack, sampleScore, true);
+    expect(analysis.disputeId).toBe('PP-D-AI-TEST-1');
+    expect(['groq', 'gemini', 'fallback']).toContain(analysis.source);
+    expect(analysis.citedFactIds.length).toBeGreaterThan(0);
   });
 });
