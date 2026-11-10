@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   X,
   ShieldCheck,
@@ -74,51 +74,119 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
     return { text, citedIds };
   };
 
-  const initial = generateInitialDraft();
-  const [aiAnalysis, setAiAnalysis] = useState<CachedAIAnalysis | null>(
-    dispute.cachedAnalysis || null
-  );
-  const [draftNotes, setDraftNotes] = useState<string>(
-    dispute.cachedAnalysis?.draftNotes || initial.text
-  );
-  const [citedFactIds, setCitedFactIds] = useState<string[]>(
-    dispute.cachedAnalysis?.citedFactIds || initial.citedIds
-  );
+  // Initial states: start blank and loading per requirement
+  const [isGenerating, setIsGenerating] = useState<boolean>(true);
+  const [aiAnalysis, setAiAnalysis] = useState<CachedAIAnalysis | null>(null);
+  const [draftNotes, setDraftNotes] = useState<string>('');
+  const [citedFactIds, setCitedFactIds] = useState<string[]>([]);
 
   // Partial offer state
   const [showOfferInput, setShowOfferInput] = useState(false);
-  const [offerAmount, setOfferAmount] = useState(
-    dispute.cachedAnalysis?.recommendedOfferAmount
-      ? dispute.cachedAnalysis.recommendedOfferAmount.toFixed(2)
-      : (parseFloat(dispute.dispute_amount.value) * 0.4).toFixed(2)
+  const [offerAmount, setOfferAmount] = useState<string>(
+    (parseFloat(dispute.dispute_amount.value) * 0.4).toFixed(2)
   );
 
   // Payload modal state
   const [confirmPayloadModal, setConfirmPayloadModal] = useState<Record<string, unknown> | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  // Trigger Gemini AI Analysis
-  const handleTriggerAI = async () => {
-    setAnalyzing(true);
+  // 3-Tier Fallback Chain execution: Tier 1 (Groq) -> Tier 2 (Gemini) -> Tier 3 (Grounded Rule Engine)
+  const executeAIFallbackChain = useCallback(async () => {
+    setIsGenerating(true);
     setActionError(null);
+    setDraftNotes('');
+    setAiAnalysis(null);
+    setCitedFactIds([]);
+
     try {
+      // Backend cascade: Tier 1 (Groq openai/gpt-oss-120b) -> Tier 2 (Gemini Flash AI) -> Tier 3 (Grounded Rule Engine)
       const res = await analyzeDispute(dispute.dispute_id);
-      if (res.analysis) {
+      if (res && res.analysis) {
         setAiAnalysis(res.analysis);
-        setDraftNotes(res.analysis.draftNotes);
-        setCitedFactIds(res.analysis.citedFactIds);
+        setDraftNotes(res.analysis.draftNotes || '');
+        setCitedFactIds(res.analysis.citedFactIds || []);
         if (res.analysis.recommendedOfferAmount) {
           setOfferAmount(res.analysis.recommendedOfferAmount.toFixed(2));
         }
+        return;
       }
+      throw new Error('Analysis response was empty');
     } catch (err: unknown) {
-      setActionError(err instanceof Error ? err.message : 'AI analysis failed');
+      console.warn('[AI Pipeline] Backend call failed, executing client-side Tier 3 Grounded Rule Engine fallback:', err);
+      // Client-side Tier 3 Grounded Rule Engine Fallback
+      const fallbackDraft = generateInitialDraft();
+      const fallbackAnalysis: CachedAIAnalysis = {
+        disputeId: dispute.dispute_id,
+        summary: `Deterministic rule-based defense generated using ${dispute.evidencePack.facts.length} verified evidence facts.`,
+        recommendation:
+          dispute.score.totalScore >= 70
+            ? 'fight'
+            : dispute.score.totalScore >= 40
+            ? 'partial_offer'
+            : 'accept',
+        recommendedOfferAmount:
+          dispute.score.band === 'medium'
+            ? parseFloat(dispute.dispute_amount.value) * 0.4
+            : undefined,
+        draftNotes: fallbackDraft.text,
+        citedFactIds: fallbackDraft.citedIds,
+        generatedAt: new Date().toISOString(),
+        needsReview: true,
+        source: 'fallback',
+        model: 'grounded-rule-engine',
+      };
+      setAiAnalysis(fallbackAnalysis);
+      setDraftNotes(fallbackDraft.text);
+      setCitedFactIds(fallbackDraft.citedIds);
     } finally {
-      setAnalyzing(false);
+      setIsGenerating(false);
     }
+  }, [dispute]);
+
+  // Auto-trigger 3-tier cascade on modal mount
+  useEffect(() => {
+    executeAIFallbackChain();
+  }, [executeAIFallbackChain]);
+
+  const renderAIProviderBadge = () => {
+    if (isGenerating) {
+      return (
+        <span className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold px-2 py-0.5 rounded-full inline-flex items-center space-x-1.5 animate-pulse">
+          <RefreshCw className="w-2.5 h-2.5 animate-spin text-indigo-600" />
+          <span>Synthesizing Strategy...</span>
+        </span>
+      );
+    }
+
+    if (!aiAnalysis) return null;
+
+    if (aiAnalysis.source === 'groq') {
+      return (
+        <span className="text-[10px] bg-orange-100 text-orange-800 border border-orange-200 font-bold px-2 py-0.5 rounded-full inline-flex items-center space-x-1 shadow-2xs">
+          <Sparkles className="w-3 h-3 text-orange-600" />
+          <span>Groq AI (openai/gpt-oss-120b)</span>
+        </span>
+      );
+    }
+
+    if (aiAnalysis.source === 'gemini') {
+      return (
+        <span className="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-2 py-0.5 rounded-full inline-flex items-center space-x-1 shadow-2xs">
+          <Sparkles className="w-3 h-3 text-indigo-600" />
+          <span>Gemini Flash AI</span>
+        </span>
+      );
+    }
+
+    // Default or fallback
+    return (
+      <span className="text-[10px] bg-amber-100 text-amber-800 border border-amber-200 font-bold px-2 py-0.5 rounded-full inline-flex items-center space-x-1 shadow-2xs">
+        <Bot className="w-3 h-3 text-amber-600" />
+        <span>Grounded Rule Engine</span>
+      </span>
+    );
   };
 
   const getSourceBadge = (source: EvidenceFact['source']) => {
@@ -459,21 +527,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                   <div>
                     <h4 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
                       <span>AI Strategy Copilot</span>
-                      {aiAnalysis && (
-                        aiAnalysis.source === 'groq' ? (
-                          <span className="text-[10px] bg-orange-100 text-orange-800 border border-orange-200 font-bold px-2 py-0.5 rounded-full">
-                            Groq AI ({aiAnalysis.model || 'Primary'})
-                          </span>
-                        ) : aiAnalysis.source === 'fallback' ? (
-                          <span className="text-[10px] bg-amber-100 text-amber-800 border border-amber-200 font-bold px-2 py-0.5 rounded-full">
-                            Fallback Engine
-                          </span>
-                        ) : (
-                          <span className="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-2 py-0.5 rounded-full">
-                            Gemini Flash AI
-                          </span>
-                        )
-                      )}
+                      {renderAIProviderBadge()}
                     </h4>
                     <p className="text-[11px] text-slate-500">
                       Grounded exclusively on Evidence Pack facts
@@ -482,16 +536,30 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                 </div>
 
                 <button
-                  onClick={handleTriggerAI}
-                  disabled={analyzing}
+                  onClick={executeAIFallbackChain}
+                  disabled={isGenerating || submitting || Boolean(actionSuccess)}
                   className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5 transition-colors disabled:opacity-50"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${analyzing ? 'animate-spin' : ''}`} />
-                  <span>{aiAnalysis ? 'Re-analyze with AI' : 'Draft with Gemini'}</span>
+                  <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
+                  <span>{isGenerating ? 'Synthesizing...' : 'Re-analyze with AI'}</span>
                 </button>
               </div>
 
-              {aiAnalysis ? (
+              {isGenerating ? (
+                <div className="space-y-2 pt-1 animate-pulse">
+                  <div className="flex items-center justify-between bg-white/80 p-2.5 rounded-xl border border-indigo-100">
+                    <div className="flex items-center space-x-2">
+                      <div className="h-4 bg-indigo-200/60 rounded w-16"></div>
+                      <div className="h-5 bg-indigo-300/70 rounded-md w-36"></div>
+                    </div>
+                    <div className="h-4 bg-indigo-200/50 rounded-full w-40"></div>
+                  </div>
+                  <div className="bg-white/50 p-3 rounded-lg border border-indigo-50 space-y-1.5">
+                    <div className="h-3 bg-indigo-200/50 rounded w-11/12"></div>
+                    <div className="h-3 bg-indigo-200/40 rounded w-4/5"></div>
+                  </div>
+                </div>
+              ) : aiAnalysis ? (
                 <div className="space-y-2 pt-1 text-xs">
                   {/* Strategy Badge & Citation Check */}
                   <div className="flex flex-wrap items-center justify-between gap-2 bg-white/80 p-2.5 rounded-xl border border-indigo-100">
@@ -544,7 +612,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                 <div className="bg-white/60 p-3 rounded-xl border border-indigo-100 text-xs text-slate-600 flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Bot className="w-4 h-4 text-indigo-500" />
-                    <span>Click <strong>Draft with Gemini</strong> to synthesize evidence into a formal defense.</span>
+                    <span>Click <strong>Re-analyze with AI</strong> to synthesize evidence into a formal defense.</span>
                   </div>
                 </div>
               )}
@@ -558,27 +626,66 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                     Draft Defense Response (PayPal Submission)
                   </h4>
                   <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.2 rounded-full font-medium">
-                    Editable
+                    {isGenerating ? 'Synthesizing...' : 'Editable'}
                   </span>
                 </div>
                 <div className="text-xs text-slate-500">
-                  Cited Fact IDs: {citedFactIds.map((id) => (
-                    <span key={id} className="font-mono bg-slate-100 text-blue-700 px-1 py-0.2 rounded ml-1 font-semibold">
-                      [{id}]
-                    </span>
-                  ))}
+                  Cited Fact IDs:{' '}
+                  {isGenerating ? (
+                    <span className="text-slate-400 italic font-mono text-[11px]">Identifying facts...</span>
+                  ) : citedFactIds.length > 0 ? (
+                    citedFactIds.map((id) => (
+                      <span key={id} className="font-mono bg-slate-100 text-blue-700 px-1 py-0.2 rounded ml-1 font-semibold">
+                        [{id}]
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-slate-400 italic text-[11px]">None</span>
+                  )}
                 </div>
               </div>
               <p className="text-xs text-slate-500 mb-2">
                 This response is grounded exclusively on verified evidence pack facts. Review or edit before approving submission.
               </p>
-              <textarea
-                value={draftNotes}
-                onChange={(e) => setDraftNotes(e.target.value)}
-                rows={5}
-                disabled={Boolean(actionSuccess)}
-                className="w-full text-xs font-mono p-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-hidden transition-all text-slate-800 leading-relaxed disabled:bg-slate-100 disabled:text-slate-500 shadow-2xs"
-              />
+
+              {isGenerating ? (
+                <div className="w-full h-36 bg-slate-50/80 border border-slate-200 rounded-xl p-4 flex flex-col justify-between relative overflow-hidden shadow-2xs">
+                  <div className="space-y-3 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Sparkles className="w-4 h-4 text-indigo-600 animate-spin" />
+                        <span className="text-xs font-semibold text-slate-700">
+                          Synthesizing formal defense draft with AI pipeline...
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1.5 text-[11px] font-mono text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        <span>Evaluating facts & citations</span>
+                      </div>
+                    </div>
+                    <div className="h-3 bg-slate-200/80 rounded w-11/12"></div>
+                    <div className="h-3 bg-slate-200/70 rounded w-5/6"></div>
+                    <div className="h-3 bg-slate-200/60 rounded w-3/4"></div>
+                    <div className="h-3 bg-slate-200/50 rounded w-10/12"></div>
+                  </div>
+                  <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between text-[11px] text-slate-400">
+                    <span className="flex items-center space-x-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                      <span className="font-medium text-slate-600">3-Tier Cascade Active</span>
+                    </span>
+                    <span className="font-mono text-slate-500">Tier 1: Groq &rarr; Tier 2: Gemini &rarr; Tier 3: Grounded Rules</span>
+                  </div>
+                </div>
+              ) : (
+                <textarea
+                  value={draftNotes}
+                  onChange={(e) => setDraftNotes(e.target.value)}
+                  rows={5}
+                  disabled={Boolean(actionSuccess)}
+                  placeholder="Defense draft will appear here..."
+                  className="w-full text-xs font-mono p-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-hidden transition-all text-slate-800 leading-relaxed disabled:bg-slate-100 disabled:text-slate-500 shadow-2xs"
+                />
+              )}
             </div>
 
             {/* Partial Offer Input (Expandable) */}
@@ -626,7 +733,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                 {/* Accept Claim Button */}
                 <button
                   onClick={handleAcceptClaim}
-                  disabled={submitting || Boolean(actionSuccess)}
+                  disabled={isGenerating || submitting || Boolean(actionSuccess)}
                   className="px-3 py-2 rounded-xl text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors disabled:opacity-40"
                 >
                   Accept Claim
@@ -636,7 +743,7 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                 {!showOfferInput && (
                   <button
                     onClick={() => setShowOfferInput(true)}
-                    disabled={submitting || Boolean(actionSuccess)}
+                    disabled={isGenerating || submitting || Boolean(actionSuccess)}
                     className="px-3 py-2 rounded-xl text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors disabled:opacity-40"
                   >
                     Offer Partial Refund
@@ -649,14 +756,15 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                 <button
                   type="button"
                   onClick={handleOpenEvidenceConfirm}
-                  className="px-2.5 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  disabled={isGenerating || submitting || Boolean(actionSuccess) || !draftNotes.trim()}
+                  className="px-2.5 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-40"
                   title="Inspect raw JSON payload before submitting"
                 >
                   Inspect Payload
                 </button>
                 <button
                   onClick={handleApproveAndSubmit}
-                  disabled={submitting || Boolean(actionSuccess)}
+                  disabled={isGenerating || submitting || Boolean(actionSuccess) || !draftNotes.trim()}
                   className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all flex items-center space-x-2 disabled:opacity-40 disabled:hover:bg-blue-600"
                 >
                   <Send className="w-4 h-4" />
