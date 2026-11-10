@@ -132,9 +132,101 @@ describe('Scoring Engine - ITEM_NOT_RECEIVED (INR)', () => {
     };
 
     const result = scoreDispute(baseDispute, orderNoTracking);
-    // Passes address (+15), no pre-delivery complaint (+5), no prior refund (+5) = 25 points
-    expect(result.totalScore).toBe(25);
+    // Address matching fails without delivery location (+0), no pre-delivery complaint (+5), no prior refund (+5) = 10 points
+    expect(result.totalScore).toBe(10);
     expect(result.band).toBe('weak');
+  });
+
+  describe('Address Matching (Criterion #5)', () => {
+    it('awards 15 points when delivery location contains both city and state', () => {
+      const orderMatching: StoreOrder = {
+        ...perfectOrder,
+        shippingAddress: {
+          ...perfectOrder.shippingAddress,
+          city: 'Portland',
+          state: 'OR',
+        },
+        trackingEvents: [
+          {
+            time: '2026-10-28T14:00:00Z',
+            status: 'DELIVERED',
+            location: 'Portland, OR',
+            signedBy: 'A. Smith',
+          },
+        ],
+      };
+
+      const result = scoreDispute(baseDispute, orderMatching);
+      const addressCheck = result.breakdown.find((b) => b.id === 'INR_ADDRESS_MATCHES');
+      expect(addressCheck?.passed).toBe(true);
+      expect(addressCheck?.pointsAwarded).toBe(15);
+    });
+
+    it('awards 0 points when there is a city or state mismatch', () => {
+      const orderMismatchState: StoreOrder = {
+        ...perfectOrder,
+        shippingAddress: {
+          ...perfectOrder.shippingAddress,
+          city: 'Portland',
+          state: 'OR',
+        },
+        trackingEvents: [
+          {
+            time: '2026-10-28T14:00:00Z',
+            status: 'DELIVERED',
+            location: 'Portland, ME', // Mismatched state ME vs OR
+            signedBy: 'A. Smith',
+          },
+        ],
+      };
+
+      const result = scoreDispute(baseDispute, orderMismatchState);
+      const addressCheck = result.breakdown.find((b) => b.id === 'INR_ADDRESS_MATCHES');
+      expect(addressCheck?.passed).toBe(false);
+      expect(addressCheck?.pointsAwarded).toBe(0);
+      expect(addressCheck?.reason).toContain('does not match');
+
+      const orderMismatchCity: StoreOrder = {
+        ...perfectOrder,
+        shippingAddress: {
+          ...perfectOrder.shippingAddress,
+          city: 'Seattle',
+          state: 'WA',
+        },
+        trackingEvents: [
+          {
+            time: '2026-10-28T14:00:00Z',
+            status: 'DELIVERED',
+            location: 'Spokane, WA', // Mismatched city Spokane vs Seattle
+            signedBy: 'A. Smith',
+          },
+        ],
+      };
+
+      const resultCity = scoreDispute(baseDispute, orderMismatchCity);
+      const addressCheckCity = resultCity.breakdown.find((b) => b.id === 'INR_ADDRESS_MATCHES');
+      expect(addressCheckCity?.passed).toBe(false);
+      expect(addressCheckCity?.pointsAwarded).toBe(0);
+    });
+
+    it('awards 0 points when location data is missing', () => {
+      const orderNoLocation: StoreOrder = {
+        ...perfectOrder,
+        trackingEvents: [
+          {
+            time: '2026-10-28T14:00:00Z',
+            status: 'DELIVERED',
+            location: '', // Empty location
+          },
+        ],
+      };
+
+      const result = scoreDispute(baseDispute, orderNoLocation);
+      const addressCheck = result.breakdown.find((b) => b.id === 'INR_ADDRESS_MATCHES');
+      expect(addressCheck?.passed).toBe(false);
+      expect(addressCheck?.pointsAwarded).toBe(0);
+      expect(addressCheck?.reason).toContain('Missing delivery location');
+    });
   });
 
   it('deducts 5 points when customer complained before delivery', () => {

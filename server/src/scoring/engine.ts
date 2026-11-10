@@ -174,30 +174,49 @@ function scoreItemNotReceived(
 
   // 5. Delivery address matches transaction shipping address (+15)
   const w5 = INR_RUBRIC_WEIGHTS.find((w) => w.id === 'INR_ADDRESS_MATCHES')!;
-  const hasValidAddress = Boolean(
-    order?.shippingAddress?.line1 &&
-      order?.shippingAddress?.city &&
-      order?.shippingAddress?.postalCode
-  );
-  if (hasValidAddress) {
-    totalScore += w5.points;
-    breakdown.push({
-      id: w5.id,
-      title: w5.title,
-      pointsPossible: w5.points,
-      pointsAwarded: w5.points,
-      passed: true,
-      reason: `Delivery address on record matches transaction (${order?.shippingAddress.city}, ${order?.shippingAddress.state} ${order?.shippingAddress.postalCode})`,
-    });
-  } else {
+  const deliveryLocation = deliveryEvent?.location?.trim();
+  const shippingCity = order?.shippingAddress?.city?.trim();
+  const shippingState = order?.shippingAddress?.state?.trim();
+
+  if (!deliveryLocation || !shippingCity || !shippingState) {
     breakdown.push({
       id: w5.id,
       title: w5.title,
       pointsPossible: w5.points,
       pointsAwarded: 0,
       passed: false,
-      reason: 'Incomplete or missing shipping address in order record.',
+      reason: 'Missing delivery location or order shipping address data.',
     });
+  } else {
+    const locLower = deliveryLocation.toLowerCase();
+    const cityLower = shippingCity.toLowerCase();
+    const stateLower = shippingState.toLowerCase();
+
+    const containsCity = locLower.includes(cityLower);
+    const stateEscaped = shippingState.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const stateRegex = new RegExp(`(^|[^a-zA-Z0-9])${stateEscaped}([^a-zA-Z0-9]|$)`, 'i');
+    const containsState = stateRegex.test(deliveryLocation) || (shippingState.length > 2 && locLower.includes(stateLower));
+
+    if (containsCity && containsState) {
+      totalScore += w5.points;
+      breakdown.push({
+        id: w5.id,
+        title: w5.title,
+        pointsPossible: w5.points,
+        pointsAwarded: w5.points,
+        passed: true,
+        reason: `Delivery location (${deliveryLocation}) matches order shipping address (${shippingCity}, ${shippingState}).`,
+      });
+    } else {
+      breakdown.push({
+        id: w5.id,
+        title: w5.title,
+        pointsPossible: w5.points,
+        pointsAwarded: 0,
+        passed: false,
+        reason: `Delivery location (${deliveryLocation}) does not match order shipping address (${shippingCity}, ${shippingState}).`,
+      });
+    }
   }
 
   // 6. No customer complaint messages before delivery (+5)
