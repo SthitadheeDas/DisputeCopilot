@@ -35,9 +35,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-bold text-xl tracking-tight text-slate-900">
                   Dispute<span className="text-blue-600">Copilot</span>
                 </span>
-                <span className="text-xs bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded-full border border-slate-200">
-                  PayPal AI
-                </span>
               </div>
               <p className="text-xs text-slate-500">Autonomous Merchant Defense System</p>
             </div>
@@ -126,11 +123,12 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   onClick={onResetDemoData}
                   disabled={resetting}
-                  className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200 cursor-pointer disabled:opacity-50"
-                  title="Reset demo data back to default 6 active disputes"
-                  aria-label="Reset demo data"
+                  className="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 hover:border-slate-400 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                  title="Replenish demo data back to default 6 active disputes"
+                  aria-label="Replenish Demo Data"
                 >
-                  <RotateCcw className={`w-4 h-4 text-slate-600 ${resetting ? 'animate-spin text-blue-600' : ''}`} />
+                  <RotateCcw className={`w-3.5 h-3.5 text-slate-600 ${resetting ? 'animate-spin text-blue-600' : ''}`} />
+                  <span>Replenish Demo Data</span>
                 </button>
               )}
             </div>
