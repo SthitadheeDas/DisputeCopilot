@@ -11,8 +11,9 @@
       "F4",
       "F5"
     ],
-    "generatedAt": "2026-11-09T17:37:26.555Z",
-    "needsReview": false
+    "generatedAt": "2026-11-10T04:14:41.101Z",
+    "needsReview": true,
+    "source": "fallback"
   },
   "PP-D-CACHE-TEST": {
     "disputeId": "PP-D-CACHE-TEST",
@@ -22,7 +23,7 @@
     "citedFactIds": [
       "F1"
     ],
-    "generatedAt": "2026-11-09T17:37:26.562Z",
+    "generatedAt": "2026-11-10T04:14:41.112Z",
     "needsReview": false
   },
   "PP-D-WEAK-TEST": {
@@ -37,8 +38,9 @@
       "F4",
       "F5"
     ],
-    "generatedAt": "2026-11-09T17:37:26.571Z",
-    "needsReview": false
+    "generatedAt": "2026-11-10T04:14:41.123Z",
+    "needsReview": true,
+    "source": "fallback"
   },
   "PP-D-MED-TEST": {
     "disputeId": "PP-D-MED-TEST",
@@ -53,8 +55,9 @@
       "F4",
       "F5"
     ],
-    "generatedAt": "2026-11-09T17:37:26.580Z",
-    "needsReview": false
+    "generatedAt": "2026-11-10T04:14:41.134Z",
+    "needsReview": true,
+    "source": "fallback"
   },
   "PP-D-1001": {
     "disputeId": "PP-D-1001",

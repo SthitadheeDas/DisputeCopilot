@@ -12,10 +12,10 @@
     "dispute_lifecycle_stage": "INQUIRY",
     "dispute_channel": "INTERNAL",
     "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
-    "seller_response_due_date": "2026-11-08T18:00:00Z",
+    "seller_response_due_date": "2026-11-13T18:00:00Z",
     "disputed_transactions": [
       {
-        "seller_transaction_id": "REPLACE_WITH_TXN_ID_1",
+        "seller_transaction_id": "TXN_9982410",
         "buyer_transaction_id": "BUYER_TXN_1001",
         "transaction_status": "COMPLETED",
         "gross_amount": {
@@ -60,10 +60,10 @@
     "dispute_lifecycle_stage": "INQUIRY",
     "dispute_channel": "INTERNAL",
     "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
-    "seller_response_due_date": "2026-11-12T18:00:00Z",
+    "seller_response_due_date": "2026-11-15T18:00:00Z",
     "disputed_transactions": [
       {
-        "seller_transaction_id": "REPLACE_WITH_TXN_ID_2",
+        "seller_transaction_id": "TXN_9982411",
         "buyer_transaction_id": "BUYER_TXN_1002",
         "transaction_status": "COMPLETED",
         "gross_amount": {
@@ -108,10 +108,10 @@
     "dispute_lifecycle_stage": "INQUIRY",
     "dispute_channel": "INTERNAL",
     "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
-    "seller_response_due_date": "2026-11-09T14:00:00Z",
+    "seller_response_due_date": "2026-11-16T18:00:00Z",
     "disputed_transactions": [
       {
-        "seller_transaction_id": "REPLACE_WITH_TXN_ID_3",
+        "seller_transaction_id": "TXN_9982412",
         "buyer_transaction_id": "BUYER_TXN_1003",
         "transaction_status": "COMPLETED",
         "gross_amount": {
@@ -156,10 +156,10 @@
     "dispute_lifecycle_stage": "CLAIM",
     "dispute_channel": "INTERNAL",
     "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
-    "seller_response_due_date": "2026-11-08T08:00:00Z",
+    "seller_response_due_date": "2026-11-14T18:00:00Z",
     "disputed_transactions": [
       {
-        "seller_transaction_id": "REPLACE_WITH_TXN_ID_4",
+        "seller_transaction_id": "TXN_9982413",
         "buyer_transaction_id": "BUYER_TXN_1004",
         "transaction_status": "COMPLETED",
         "gross_amount": {
@@ -204,10 +204,10 @@
     "dispute_lifecycle_stage": "INQUIRY",
     "dispute_channel": "INTERNAL",
     "reason": "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED",
-    "seller_response_due_date": "2026-11-11T12:00:00Z",
+    "seller_response_due_date": "2026-11-17T18:00:00Z",
     "disputed_transactions": [
       {
-        "seller_transaction_id": "REPLACE_WITH_TXN_ID_5",
+        "seller_transaction_id": "TXN_9982414",
         "buyer_transaction_id": "BUYER_TXN_1005",
         "transaction_status": "COMPLETED",
         "gross_amount": {
@@ -252,10 +252,10 @@
     "dispute_lifecycle_stage": "INQUIRY",
     "dispute_channel": "INTERNAL",
     "reason": "MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED",
-    "seller_response_due_date": "2026-11-14T20:00:00Z",
+    "seller_response_due_date": "2026-11-18T18:00:00Z",
     "disputed_transactions": [
       {
-        "seller_transaction_id": "REPLACE_WITH_TXN_ID_6",
+        "seller_transaction_id": "TXN_9982415",
         "buyer_transaction_id": "BUYER_TXN_1006",
         "transaction_status": "COMPLETED",
         "gross_amount": {

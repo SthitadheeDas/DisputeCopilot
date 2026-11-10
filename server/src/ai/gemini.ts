@@ -14,6 +14,7 @@ export interface AIAnalysisOutput {
   draftNotes: string;
   citedFactIds: string[];
   needsReview?: boolean;
+  source?: 'gemini' | 'fallback';
 }
 
 /**
@@ -109,6 +110,8 @@ export async function analyzeDisputeWithGemini(
   if (!CONFIG.gemini.apiKey) {
     console.warn('[Gemini] GEMINI_API_KEY is not set. Generating grounded deterministic draft.');
     const fallback = generateFallbackAnalysis(dispute, evidencePack, scoreResult);
+    fallback.needsReview = true;
+    fallback.source = 'fallback';
     setCachedAnalysis(fallback);
     return fallback;
   }
@@ -146,7 +149,7 @@ export async function analyzeDisputeWithGemini(
     required: ['summary', 'recommendation', 'draftNotes', 'citedFactIds'],
   };
 
-  const callModelWithTimeout = async (prompt: string, timeoutMs = 8000): Promise<AIAnalysisOutput> => {
+  const callModelWithTimeout = async (prompt: string, timeoutMs = 15000): Promise<AIAnalysisOutput> => {
     let timer: NodeJS.Timeout;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timer = setTimeout(() => reject(new Error(`Gemini API call timed out after ${timeoutMs}ms`)), timeoutMs);
@@ -205,6 +208,7 @@ export async function analyzeDisputeWithGemini(
       citedFactIds: safeCitedIds,
       generatedAt: new Date().toISOString(),
       needsReview,
+      source: 'gemini',
     };
 
     // Cache the result
@@ -214,7 +218,8 @@ export async function analyzeDisputeWithGemini(
     const msg = err instanceof Error ? err.message : String(err);
     console.warn(`[Gemini] Model ${modelName} request unsuccessful (${msg}). Using grounded fallback generator.`);
     const fallback = generateFallbackAnalysis(dispute, evidencePack, scoreResult);
-    fallback.needsReview = false;
+    fallback.needsReview = true;
+    fallback.source = 'fallback';
     setCachedAnalysis(fallback);
     return fallback;
   }
@@ -295,6 +300,7 @@ function generateFallbackAnalysis(
     draftNotes,
     citedFactIds: Array.from(new Set(citedIds)),
     generatedAt: new Date().toISOString(),
-    needsReview: false,
+    needsReview: true,
+    source: 'fallback',
   };
 }

@@ -23,18 +23,21 @@ function enrichDispute(dispute: PayPalDispute) {
   const txnId = dispute.disputed_transactions?.[0]?.seller_transaction_id || '';
   let order: StoreOrder | null = findOrderByTransactionId(txnId);
 
-  // Fallback match: if txnId is placeholder or unmatched, match by customer name or amount
+  // Secondary match: if txnId is placeholder or unmatched, require simultaneous customerName AND amount match.
+  // Do NOT allow matching on amount alone.
   if (!order) {
     const buyerName = dispute.disputed_transactions?.[0]?.buyer?.name;
     const amountVal = parseFloat(dispute.dispute_amount?.value || '0');
     const allOrders = loadStoreOrders();
 
-    order =
-      allOrders.find(
-        (o) =>
-          (buyerName && o.customerName.toLowerCase() === buyerName.toLowerCase()) ||
-          Math.abs(o.amount - amountVal) < 0.01
-      ) || null;
+    if (buyerName && amountVal > 0) {
+      order =
+        allOrders.find(
+          (o) =>
+            o.customerName.toLowerCase() === buyerName.toLowerCase() &&
+            Math.abs(o.amount - amountVal) < 0.01
+        ) || null;
+    }
   }
 
   const evidencePack = buildEvidencePack(dispute, order);

@@ -475,7 +475,7 @@ components:
       properties:
         seller_transaction_id:
           type: string
-          example: REPLACE_WITH_TXN_ID_1
+          example: TXN_9982410
         buyer_transaction_id:
           type: string
           example: BUYER_TXN_1001
@@ -500,7 +500,7 @@ components:
           example: ORD-1001
         paypalTransactionId:
           type: string
-          example: REPLACE_WITH_TXN_ID_1
+          example: TXN_9982410
         customerName:
           type: string
           example: Sarah Jenkins

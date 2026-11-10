@@ -10,6 +10,7 @@ export interface CachedAIAnalysis {
   citedFactIds: string[];
   generatedAt: string;
   needsReview?: boolean;
+  source?: 'gemini' | 'fallback';
 }
 
 export function getCachedAnalysis(disputeId: string): CachedAIAnalysis | null {

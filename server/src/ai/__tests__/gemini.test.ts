@@ -52,6 +52,8 @@ describe('AI Citation & Analysis Verification', () => {
     expect(analysis.disputeId).toBe('PP-D-AI-TEST-1');
     expect(analysis.recommendation).toBe('fight');
     expect(analysis.citedFactIds.length).toBeGreaterThan(0);
+    expect(analysis.source).toBe('fallback');
+    expect(analysis.needsReview).toBe(true);
 
     // Verify all cited fact IDs actually exist in the evidence pack
     const allowedIds = new Set(sampleEvidencePack.facts.map((f) => f.id));

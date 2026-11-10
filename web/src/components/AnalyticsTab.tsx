@@ -218,6 +218,15 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     return disputedRows.reduce((sum, tx) => sum + (tx.moneyGained || 0), 0);
   }, [disputedRows]);
 
+  const wonCount = useMemo(() => {
+    return disputedRows.filter((d) => d.disputeStatus === 'Won').length;
+  }, [disputedRows]);
+
+  const projectedWinRate = useMemo(() => {
+    if (disputedRows.length === 0) return '0.0';
+    return ((wonCount / disputedRows.length) * 100).toFixed(1);
+  }, [disputedRows, wonCount]);
+
   const netRetainedRevenue = useMemo(() => {
     return grossSales - totalMoneyLost;
   }, [grossSales, totalMoneyLost]);
@@ -590,22 +599,22 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           </div>
         </div>
 
-        {/* KPI 4: Dispute Recovery P&L */}
+        {/* KPI 4: Projected Recovered Revenue */}
         <div className="bg-white p-5 rounded-2xl border border-purple-200 shadow-2xs hover:shadow-xs transition-shadow">
           <div className="flex items-center justify-between text-purple-900 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-purple-800">
-              Dispute Recovery P&L ($)
+              Projected Recovered Revenue ($)
             </span>
             <div className="p-2 bg-purple-100 text-purple-700 rounded-xl">
               <Sparkles className="w-5 h-5" />
             </div>
           </div>
           <div className="text-3xl font-black text-purple-700 tracking-tight">
-            +${disputeRecoveryPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            +${totalMoneyGained.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className="text-xs text-slate-500 mt-1.5 flex items-center justify-between">
-            <span className="text-emerald-600 font-semibold">+${totalMoneyGained.toFixed(2)} won</span>
-            <span className="text-slate-400 font-normal">vs -${totalMoneyLost.toFixed(2)} conceded</span>
+            <span className="text-emerald-600 font-semibold">{projectedWinRate}% Projected Win Rate</span>
+            <span className="text-slate-400 font-normal">P&amp;L: +${disputeRecoveryPnL.toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -713,7 +722,10 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                 Stake: <span className="font-bold text-slate-900">${totalDisputeStake.toFixed(2)}</span>
               </div>
               <div>
-                Gained (Won): <span className="font-bold text-emerald-600">+${totalMoneyGained.toFixed(2)}</span>
+                Projected Recovered Revenue: <span className="font-bold text-emerald-600">+${totalMoneyGained.toFixed(2)}</span>
+              </div>
+              <div>
+                Projected Win Rate: <span className="font-bold text-purple-700">{projectedWinRate}%</span>
               </div>
               <div>
                 Lost + Fees: <span className="font-bold text-rose-600">-${totalMoneyLost.toFixed(2)}</span>

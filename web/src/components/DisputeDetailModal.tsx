@@ -460,9 +460,15 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                     <h4 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
                       <span>Gemini AI Strategy Copilot</span>
                       {aiAnalysis && (
-                        <span className="text-[10px] bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.2 rounded-full">
-                          Structured Output
-                        </span>
+                        aiAnalysis.source === 'fallback' ? (
+                          <span className="text-[10px] bg-amber-100 text-amber-800 border border-amber-200 font-bold px-2 py-0.5 rounded-full">
+                            Fallback Engine
+                          </span>
+                        ) : (
+                          <span className="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-2 py-0.5 rounded-full">
+                            Gemini Flash AI
+                          </span>
+                        )
                       )}
                     </h4>
                     <p className="text-[11px] text-slate-500">
