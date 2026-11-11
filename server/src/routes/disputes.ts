@@ -13,7 +13,7 @@ import {
   acceptPayPalClaim,
   makePayPalOffer,
 } from '../paypal/index.js';
-import { analyzeDisputeWithGemini } from '../ai/index.js';
+import { analyzeDisputeWithGroq } from '../ai/index.js';
 import { PayPalDispute, StoreOrder } from '../types/dispute.js';
 
 const router = Router();
@@ -179,7 +179,7 @@ router.post('/disputes/:id/analyze', async (req, res) => {
     }
 
     const enriched = enrichDispute(dispute);
-    const analysis = await analyzeDisputeWithGemini(
+    const analysis = await analyzeDisputeWithGroq(
       dispute,
       enriched.evidencePack,
       enriched.score,
@@ -193,7 +193,7 @@ router.post('/disputes/:id/analyze', async (req, res) => {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error(`Error analyzing dispute ${req.params.id} with Gemini:`, err);
+    console.error(`Error analyzing dispute ${req.params.id} with Groq:`, err);
     res.status(500).json({ error: 'Failed to generate AI analysis', details: message });
   }
 });
@@ -351,7 +351,30 @@ router.post('/disputes/:id/offer', async (req, res) => {
   }
 
   try {
-    const result = await makePayPalOffer(id, parsed.data.amount, parsed.data.note);
+    let dispute: PayPalDispute | null = null;
+    if (CONFIG.dataMode === 'sandbox') {
+      try {
+        dispute = await fetchLiveDisputeDetails(id);
+      } catch {
+        dispute = findFixtureDisputeById(id);
+      }
+    } else {
+      dispute = findFixtureDisputeById(id);
+    }
+
+    if (dispute) {
+      const disputeAmount = parseFloat(dispute.dispute_amount?.value || '0');
+      if (disputeAmount > 0 && parsed.data.amount > disputeAmount) {
+        res.status(400).json({
+          error: 'Offer amount cannot exceed disputed amount',
+          details: `Offered amount (${parsed.data.amount}) exceeds disputed amount (${disputeAmount})`,
+        });
+        return;
+      }
+    }
+
+    const currency = dispute?.dispute_amount?.currency_code || 'USD';
+    const result = await makePayPalOffer(id, parsed.data.amount, parsed.data.note, currency);
 
     // Update in-memory & file mock state to resolved/settled
     updateFixtureDispute(id, {
@@ -364,17 +387,16 @@ router.post('/disputes/:id/offer', async (req, res) => {
     const cached = getCachedAnalysis(id);
     setCachedAnalysis({
       disputeId: id,
-      summary: `Merchant offered settlement refund of $${parsed.data.amount.toFixed(2)}.`,
+      summary: `Merchant offered settlement refund of ${currency} ${parsed.data.amount.toFixed(2)}.`,
       recommendation: 'partial_offer',
       recommendedOfferAmount: parsed.data.amount,
-      draftNotes: parsed.data.note || `Settlement offer of $${parsed.data.amount.toFixed(2)} submitted.`,
+      draftNotes: parsed.data.note || `Settlement offer of ${currency} ${parsed.data.amount.toFixed(2)} submitted.`,
       citedFactIds: cached?.citedFactIds || ['F1', 'F2'],
       generatedAt: new Date().toISOString(),
       needsReview: false,
     });
 
     // Record partial refund on matched order in store.json if linked
-    const dispute = findFixtureDisputeById(id);
     const txnId = dispute?.disputed_transactions?.[0]?.seller_transaction_id;
     if (txnId && parsed.data.amount > 0) {
       addOrderRefund(txnId, parsed.data.amount, 'Partial settlement refund offered to buyer');

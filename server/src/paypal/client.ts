@@ -203,13 +203,14 @@ export interface MakeOfferResult {
 export async function makePayPalOffer(
   disputeId: string,
   amount: number,
-  note = 'Merchant settlement offer'
+  note = 'Merchant settlement offer',
+  currency = 'USD'
 ): Promise<MakeOfferResult> {
   const payload = {
     note,
     offer_type: 'REFUND',
     offer_amount: {
-      currency_code: 'USD',
+      currency_code: currency,
       value: amount.toFixed(2),
     },
   };

@@ -14,5 +14,13 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'ag-grid': ['ag-grid-community', 'ag-grid-react'],
+          'lucide': ['lucide-react'],
+        },
+      },
+    },
   },
 });

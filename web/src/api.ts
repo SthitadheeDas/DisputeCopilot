@@ -1,6 +1,6 @@
 import { EnrichedDispute, HealthResponse, ActivityLogEntry, CachedAIAnalysis } from './types';
 
-const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://disputecopilot.onrender.com/api';
+const API_BASE = (import.meta as any).env?.VITE_API_URL || '/api';
 
 export async function fetchHealth(): Promise<HealthResponse> {
   const res = await fetch(`${API_BASE}/health`);
@@ -106,5 +106,17 @@ export async function fetchActivity(): Promise<{
 }> {
   const res = await fetch(`${API_BASE}/activity`);
   if (!res.ok) throw new Error(`Failed to load activity log (${res.status})`);
+  return res.json();
+}
+
+export async function resetDemoData(): Promise<{
+  success: boolean;
+  message: string;
+  total: number;
+}> {
+  const res = await fetch(`${API_BASE}/disputes/reset`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error(`Failed to reset demo data (${res.status})`);
   return res.json();
 }

@@ -51,7 +51,7 @@ export interface UnifiedTransactionRow {
   // Disputed Extra P&L Fields
   disputeId?: string;
   stakeAmount?: number;
-  actionTaken?: 'Fought via Gemini' | 'Conceded' | 'Settled';
+  actionTaken?: 'Fought via Groq AI' | 'Conceded' | 'Settled';
   moneyGained?: number;
   moneyLost?: number;
   netImpact?: number;
@@ -98,17 +98,27 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       // Standard PayPal chargeback/dispute fee is $15.00
       const PAYPAL_DISPUTE_FEE = 15.0;
 
-      let actionTaken: 'Fought via Gemini' | 'Conceded' | 'Settled' = 'Fought via Gemini';
-      let disputeStatus: 'Clean' | 'Active' | 'Won' | 'Lost' = 'Won';
+      let actionTaken: 'Fought via Groq AI' | 'Conceded' | 'Settled' = 'Fought via Groq AI';
+      let disputeStatus: 'Clean' | 'Active' | 'Won' | 'Lost' = 'Active';
       let moneyGained = 0;
       let moneyLost = 0;
 
-      if (
+      if (!isResolved) {
+        // Active dispute under review: P&L not yet realized
+        disputeStatus = 'Active';
+        actionTaken =
+          aiRec === 'accept'
+            ? 'Conceded'
+            : aiRec === 'partial_offer'
+            ? 'Settled'
+            : 'Fought via Groq AI';
+        moneyGained = 0;
+        moneyLost = 0;
+      } else if (
         statusUpper === 'CONCEDED' ||
         statusUpper === 'RESOLVED_ACCEPTED' ||
         (statusUpper === 'RESOLVED' && aiRec === 'accept') ||
-        aiRec === 'accept' ||
-        (!aiRec && score < 40 && isResolved)
+        (!aiRec && score < 40)
       ) {
         // Conceded / Accepted claim: Merchant forfeits stake amount + PayPal dispute fee
         actionTaken = 'Conceded';
@@ -129,9 +139,9 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         moneyLost = offer;
         moneyGained = Math.max(0, stake - offer);
       } else {
-        // Fought via Gemini: 100% retained under PayPal Seller Protection, dispute fee waived
-        actionTaken = 'Fought via Gemini';
-        disputeStatus = isResolved || score >= 70 ? 'Won' : 'Active';
+        // Fought & Won under PayPal Seller Protection
+        actionTaken = 'Fought via Groq AI';
+        disputeStatus = 'Won';
         moneyGained = stake;
         moneyLost = 0;
       }
@@ -224,7 +234,9 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   }, [disputedRows]);
 
   const wonCount = useMemo(() => {
-    return disputedRows.filter((d) => d.disputeStatus === 'Won').length;
+    return disputedRows.filter(
+      (d) => d.disputeStatus === 'Won' || (d.disputeStatus === 'Active' && (d.rawDispute?.score.totalScore ?? 0) >= 70)
+    ).length;
   }, [disputedRows]);
 
   const projectedWinRate = useMemo(() => {
@@ -431,12 +443,12 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           headerName: 'Action Taken',
           field: 'actionTaken',
           width: 175,
-          cellRenderer: (params: { value?: 'Fought via Gemini' | 'Conceded' | 'Settled' }) => {
-            if (params.value === 'Fought via Gemini') {
+          cellRenderer: (params: { value?: 'Fought via Groq AI' | 'Conceded' | 'Settled' }) => {
+            if (params.value === 'Fought via Groq AI') {
               return (
-                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                  <Sparkles className="w-3 h-3 text-purple-500" />
-                  <span>Fought via Gemini</span>
+                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200">
+                  <Sparkles className="w-3 h-3 text-orange-500" />
+                  <span>Fought via Groq AI</span>
                 </span>
               );
             }

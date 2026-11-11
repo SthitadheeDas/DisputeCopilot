@@ -683,9 +683,9 @@ export const DisputeDetailModal: React.FC<DisputeDetailModalProps> = ({
                   <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between text-[11px] text-slate-400">
                     <span className="flex items-center space-x-1.5">
                       <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                      <span className="font-medium text-slate-600">3-Tier Cascade Active</span>
+                      <span className="font-medium text-slate-600">AI Defense Pipeline Active</span>
                     </span>
-                    <span className="font-mono text-slate-500">Tier 1: Groq &rarr; Tier 2: Gemini &rarr; Tier 3: Grounded Rules</span>
+                    <span className="font-mono text-slate-500">Groq AI (Primary) &rarr; Grounded Rule Engine (Offline Fallback)</span>
                   </div>
                 </div>
               ) : (

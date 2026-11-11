@@ -51,10 +51,6 @@ export const CONFIG = {
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '',
-    model:
-      process.env.GEMINI_MODEL &&
-      !['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'].includes(process.env.GEMINI_MODEL)
-        ? process.env.GEMINI_MODEL
-        : 'gemini-3.8-flash',
+    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   },
 };

@@ -101,12 +101,8 @@ async function callGeminiModel(
   }
 
   const ai = new GoogleGenAI({ apiKey: CONFIG.gemini.apiKey });
-  const configuredModel = CONFIG.gemini.model || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const modelName =
-    configuredModel &&
-    !['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'].includes(configuredModel)
-      ? configuredModel
-      : 'gemini-3.8-flash';
+  const configuredModel = CONFIG.gemini.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const modelName = configuredModel;
 
   const responseSchema = {
     type: Type.OBJECT,
@@ -231,7 +227,7 @@ async function callGeminiModel(
  * 2. Secondary Fallback: Gemini 3.8 Flash (with 503 retry)
  * 3. Final Fallback: Grounded Rule Engine
  */
-export async function analyzeDisputeWithGemini(
+export async function analyzeDisputeWithGroq(
   dispute: PayPalDispute,
   evidencePack: EvidencePack,
   scoreResult: ScoreResult,
@@ -247,7 +243,7 @@ export async function analyzeDisputeWithGemini(
     }
   }
 
-  // Tier 1: Try Primary Provider (Groq)
+  // Primary & Exclusive AI Provider: Groq API
   if (CONFIG.groq.apiKey) {
     try {
       const groqResult = await generateGroqAnalysis(dispute, evidencePack, scoreResult);
@@ -267,23 +263,11 @@ export async function analyzeDisputeWithGemini(
       return analysis;
     } catch (groqErr: unknown) {
       const msg = groqErr instanceof Error ? groqErr.message : String(groqErr);
-      console.warn(`[AI Pipeline] Primary provider Groq failed (${msg}). Falling back to Gemini 3.8 Flash...`);
+      console.warn(`[AI Pipeline] Groq API call failed (${msg}). Falling back to Grounded Rule Engine...`);
     }
   }
 
-  // Tier 2: Try Secondary Fallback (Gemini 3.8 Flash)
-  if (CONFIG.gemini.apiKey) {
-    try {
-      const geminiAnalysis = await callGeminiModel(dispute, evidencePack, scoreResult);
-      setCachedAnalysis(geminiAnalysis);
-      return geminiAnalysis;
-    } catch (geminiErr: unknown) {
-      const msg = geminiErr instanceof Error ? geminiErr.message : String(geminiErr);
-      console.warn(`[AI Pipeline] Secondary provider Gemini failed (${msg}). Falling back to Grounded Rule Engine...`);
-    }
-  }
-
-  // Tier 3: Local Grounded Rule Engine Fallback
+  // Offline Safety Net: Grounded Rule Engine
   console.warn(`[AI Pipeline] Using Grounded Rule Engine for dispute ${disputeId}.`);
   const fallback = generateFallbackAnalysis(dispute, evidencePack, scoreResult);
   fallback.needsReview = true;
@@ -292,7 +276,8 @@ export async function analyzeDisputeWithGemini(
   return fallback;
 }
 
-export const analyzeDisputeWithAI = analyzeDisputeWithGemini;
+export const analyzeDisputeWithAI = analyzeDisputeWithGroq;
+export const analyzeDisputeWithGemini = analyzeDisputeWithGroq;
 
 /**
  * Grounded fallback generator when Groq & Gemini are offline, timed out, or rate limited.

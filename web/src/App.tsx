@@ -4,7 +4,7 @@ import { DisputeTable } from './components/DisputeTable';
 import { DisputeDetailModal } from './components/DisputeDetailModal';
 import { ActivityLogView } from './components/ActivityLogView';
 import { AnalyticsTab } from './components/AnalyticsTab';
-import { fetchDisputes, fetchHealth } from './api';
+import { fetchDisputes, fetchHealth, resetDemoData } from './api';
 import { EnrichedDispute, DataMode } from './types';
 import { ShieldCheck, AlertTriangle, DollarSign, Clock, RefreshCw, CheckCircle2 } from 'lucide-react';
 
@@ -126,11 +126,7 @@ export const App: React.FC = () => {
   const handleResetDemoData = useCallback(async () => {
     setResetting(true);
     try {
-      const API_BASE =
-        (import.meta as any).env?.VITE_API_URL || 'https://disputecopilot.onrender.com/api';
-      await fetch(`${API_BASE}/disputes/reset`, {
-        method: 'POST',
-      });
+      await resetDemoData();
       await loadData(true);
     } catch (err: unknown) {
       console.error('Failed to reset demo data:', err);
