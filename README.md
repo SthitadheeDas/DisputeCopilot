@@ -1,4 +1,4 @@
-# VERIFAI 🛡️
+# VERIFAI 🛡️ Dispute Copilot for Merchants
 
 > **Autonomous Merchant Defense & Intelligence System for PayPal Payment Disputes**
 
