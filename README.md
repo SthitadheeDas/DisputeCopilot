@@ -20,8 +20,8 @@ Strict safety rule: **No action or evidence is ever submitted to PayPal without 
   - **Frontend Service**: Static Site (`DisputeCopilot_Front`) hosted globally on Render CDN.
   - **Backend API Service**: Node.js / Express Web Service (`DisputeCopilot`) hosted in Singapore.
 
-### 🛡️ 100% Deterministic Winnability Engine (0–100)
-- Evaluates dispute defensibility using a pure mathematical rubric with **zero scoring hallucination**.
+### 🛡️ Deterministic Winnability Engine (0–100)
+- Evaluates dispute defensibility using a pure mathematical rubric.
 - Supports both **Item Not Received (`MERCHANDISE_OR_SERVICE_NOT_RECEIVED`)** and **Not As Described (`MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED`)** claims.
 - Classifies cases into clear score bands: **Strong (70+)**, **Medium (40–69)**, and **Weak (<40)** defense strength.
 - Automatically verifies:
