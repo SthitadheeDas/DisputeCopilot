@@ -83,7 +83,7 @@ def create_deck(output_path):
     tf.word_wrap = True
 
     p0 = tf.paragraphs[0]
-    p0.text = "DISPUTE COPILOT 🛡️"
+    p0.text = "VERIFAI 🛡️"
     p0.font.bold = True
     p0.font.size = Pt(44)
     p0.font.color.rgb = TEXT_LIGHT
@@ -194,7 +194,7 @@ def create_deck(output_path):
     # ==========================================
     slide3 = prs.slides.add_slide(blank_layout)
     add_background(slide3)
-    add_header(slide3, "Solution Overview", "Dispute Copilot: Autonomous Intelligence with Human Control", GREEN_ACCENT)
+    add_header(slide3, "Solution Overview", "VERIFAI: Autonomous Intelligence with Human Control", GREEN_ACCENT)
 
     solutions = [
         (
@@ -577,7 +577,7 @@ def create_deck(output_path):
     # ==========================================
     slide10 = prs.slides.add_slide(blank_layout)
     add_background(slide10)
-    add_header(slide10, "Business Impact", "Dispute Copilot: Transformative Value for E-Commerce Merchants", GREEN_ACCENT)
+    add_header(slide10, "Business Impact", "VERIFAI: Transformative Value for E-Commerce Merchants", GREEN_ACCENT)
 
     impacts = [
         ("65–80%", "Capital Recovery", "Helps recover contested revenue on verified fulfillments by presenting concrete carrier and signature proof under Seller Protection.", GREEN_ACCENT),
@@ -618,5 +618,5 @@ def create_deck(output_path):
     print(f"[Success] Presentation saved to {output_path}")
 
 if __name__ == '__main__':
-    out_file = sys.argv[1] if len(sys.argv) > 1 else 'DisputeCopilot_Presentation.pptx'
+    out_file = sys.argv[1] if len(sys.argv) > 1 else 'VERIFAI_Presentation.pptx'
     create_deck(out_file)
