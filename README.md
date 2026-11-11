@@ -1,7 +1,7 @@
 # Dispute Copilot 🛡️
 > **Autonomous Merchant Defense System for PayPal Payment Disputes**
 
-[![Live Demo](https://img.shields.io/badge/Demo-Render-blue?style=flat-square)](https://dispute-copilot.onrender.com)
+[![Live Demo](https://img.shields.io/badge/Demo-Render-blue?style=flat-square)](https://disputecopilot-front.onrender.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=flat-square)](LICENSE)
 
@@ -218,7 +218,7 @@ npm run test
 
 Dispute Copilot is designed to deploy seamlessly as a single **Web Service** on [Render](https://render.com). The Express server automatically serves the compiled React frontend from `web/dist` alongside all `/api` endpoints.
 
-- **Live URL Placeholder**: `https://dispute-copilot.onrender.com` *(replace with your deployed Render service URL)*
+- **Live URL Placeholder**: [https://disputecopilot-front.onrender.com/](https://disputecopilot-front.onrender.com/)
 
 ### Render Configuration Settings
 
