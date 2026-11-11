@@ -26,20 +26,33 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Title */}
-          <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-2 rounded-xl shadow-sm">
+          <div className="flex items-center gap-3">
+            {/* Shield Logo Container */}
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-sm shrink-0">
               <ShieldCheck className="w-6 h-6" />
             </div>
-            <div>
-              <div className="flex items-baseline space-x-2">
-                <span className="font-black text-xl tracking-wider text-slate-900">
+
+            {/* Text Block Vertically Centered with Icon */}
+            <div className="flex flex-col justify-center">
+              <div className="flex items-baseline gap-2.5">
+                {/* Brand Name */}
+                <span className="text-xl font-black tracking-tight text-slate-900 leading-none">
                   VERIF<span className="text-blue-600">AI</span>
                 </span>
-                <span className="text-xs font-medium text-slate-400">
+                
+                {/* Sub-Brand */}
+                <span 
+                  className="text-base font-bold text-slate-800 leading-none" 
+                  style={{ color: '#1e293b', fontWeight: 700 }}
+                >
                   Dispute Copilot for Merchants
                 </span>
               </div>
-              <p className="text-xs text-slate-500">Autonomous Merchant Defense System</p>
+
+              {/* Subtitle */}
+              <p className="text-sm font-normal text-slate-500 mt-1 leading-none">
+                Autonomous Dispute Defense System
+              </p>
             </div>
           </div>
 
