@@ -188,8 +188,8 @@ DisputeCopilot/
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/SthitadheeDas/DisputeCopilot.git
-cd DisputeCopilot
+git clone https://github.com/felix-rogue/Personal-Dispute-Copilot.git
+cd Personal-Dispute-Copilot
 ```
 
 ### Step 2: Install Dependencies
