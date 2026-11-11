@@ -265,20 +265,6 @@ Dispute Copilot is deployed on Render as a decoupled two-tier architecture:
 
 ---
 
-## 🤝 Contribution Guidelines
-
-Contributions are welcome! Please adhere to the following workflow:
-
-1. **Fork & Branch**: Create a feature branch (`git checkout -b feature/your-feature-name`).
-2. **Keep Safety Flags Enabled**: Always develop with `DRY_RUN=true` and `DATA_MODE=fixture` to avoid accidental live account state mutations.
-3. **Workspace Hygiene**:
-   - Add frontend packages inside the `web` workspace: `npm install <pkg> --workspace=web`
-   - Add backend packages inside the `server` workspace: `npm install <pkg> --workspace=server`
-4. **Quality Gates**: Ensure `npm run test` and `npm run build` pass with zero errors before submitting a pull request.
-5. **Code Style**: Adhere to TypeScript strict mode standards and avoid scoring hallucinations.
-
----
-
 ## ⚖️ License
 
 Distributed under the [MIT License](LICENSE).
