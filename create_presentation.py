@@ -96,7 +96,7 @@ def create_deck(output_path):
     p1.space_before = Pt(12)
 
     p2 = tf.add_paragraph()
-    p2.text = "Empowering small merchants with 100% deterministic defensibility scoring, ultra-fast Groq AI response drafting, and a strict Human-in-the-Loop safety harness."
+    p2.text = "Empowering merchants with objective, rubric-based defensibility scoring, high-speed Groq AI response drafting, and human-in-the-loop merchant controls."
     p2.font.size = Pt(15)
     p2.font.color.rgb = TEXT_MUTED
     p2.space_before = Pt(14)
@@ -104,7 +104,7 @@ def create_deck(output_path):
     # Bottom pill badges
     badges = [
         ("PayPal Disputes API v1", ACCENT_BLUE),
-        ("100% Deterministic Rubric", GREEN_ACCENT),
+        ("Objective Rubric Scoring", GREEN_ACCENT),
         ("Groq AI (openai/gpt-oss-120b)", ORANGE_ACCENT),
         ("Human-in-the-Loop Safe", CYAN_ACCENT),
     ]
@@ -204,9 +204,9 @@ def create_deck(output_path):
             ACCENT_BLUE
         ),
         (
-            "2. Deterministic Scoring",
-            "100% Mathematical Winnability",
-            "Evaluates case strength on a strict 0–100 rubric with zero hallucinations. Instantly classifies claims into Strong (70+), Medium (40-69), or Weak (<40) defense strength bands.",
+            "2. Objective Scoring",
+            "Fact-Based Defensibility Rubric",
+            "Evaluates case strength on a structured 0–100 rubric grounded in carrier delivery events, signatures, and catalog disclosures. Categorizes claims into Strong (70+), Medium (40-69), or Weak (<40) defense strength bands.",
             GREEN_ACCENT
         ),
         (
@@ -253,7 +253,7 @@ def create_deck(output_path):
 
     steps = [
         ("Step 1: Ingestion", "PayPal Disputes v1\n& Store DB Sync", "Fetches disputes, correlates store orders & carrier tracking into Evidence Pack [F1, F2...]", CYAN_ACCENT),
-        ("Step 2: Scoring", "Mathematical 0-100\nDeterministic Rubric", "Evaluates carrier milestones, signature proof, address matching, and chat timing.", GREEN_ACCENT),
+        ("Step 2: Scoring", "Objective 0-100\nDefensibility Rubric", "Evaluates carrier milestones, signature proof, address matching, and chat timing.", GREEN_ACCENT),
         ("Step 3: AI Drafting", "Groq AI & Citation\nVerification Loop", "Generates cited responses using openai/gpt-oss-120b; auto-corrects citation errors.", ORANGE_ACCENT),
         ("Step 4: Human Sign-off", "Payload Inspection\n& One-Click Action", "Merchant approves action: Fight (Submit Evidence), Settle (Partial Offer), or Concede.", PURPLE_ACCENT),
     ]
@@ -293,7 +293,7 @@ def create_deck(output_path):
     # ==========================================
     slide5 = prs.slides.add_slide(blank_layout)
     add_background(slide5)
-    add_header(slide5, "Deterministic Mathematical Rubric", "100% Factual Defense Scoring with Zero Hallucination", GREEN_ACCENT)
+    add_header(slide5, "Evidence-Based Rubric", "Objective Case Scoring (0–100) Based on Verified Facts", GREEN_ACCENT)
 
     # INR Panel
     inr_card = create_card(slide5, Inches(0.8), Inches(1.9), Inches(5.6), Inches(4.8), border_color=ACCENT_BLUE)
@@ -397,7 +397,7 @@ def create_deck(output_path):
         "Every factual claim must bracket a verified ID: [F1], [F16]",
         "Automatic Citation Checker compares cited IDs against indexed Evidence Pack facts",
         "Self-Correction Retry: If an invalid fact ID is cited, triggers corrective prompt retry",
-        "Offline Grounded Rule Engine: 100% deterministic local template generator if offline",
+        "Offline Grounded Rule Engine: Reliable local template generator when cloud AI services are offline or rate-limited",
     ]
     for pt in points_guard:
         p_sub = tf_r.add_paragraph()
@@ -457,7 +457,7 @@ def create_deck(output_path):
     # 3 Top KPI Stat Boxes
     kpis = [
         ("Gross Sales Monitored", "$18,429.50", "Full transaction history across PayPal channels", ACCENT_BLUE),
-        ("Dispute Win Projection", "83.3%", "High defensibility rate on documented shipments", GREEN_ACCENT),
+        ("Projected Win Rate", "70–80%", "For orders with verified carrier delivery and signature confirmation", GREEN_ACCENT),
         ("Dispute Fee Savings", "$90.00 Saved", "$15.00 PayPal chargeback fee waived per won case", ORANGE_ACCENT),
     ]
 
@@ -503,7 +503,7 @@ def create_deck(output_path):
     p.font.color.rgb = CYAN_ACCENT
 
     grid_features = [
-        "• Virtualized Row Rendering: Flawless performance handling thousands of historical transactions.",
+        "• Virtualized Row Rendering: High-performance rendering handling thousands of historical transactions.",
         "• Accurate Realized P&L: Distinguishes active inquiries from resolved cases to prevent premature win accounting.",
         "• Deep 'View Order' Inspector: Instant modal drill-down into ordered line items, tracking timeline, and customer chat logs.",
         "• One-Click Demo Replenishment: Re-populates realistic PayPal dispute fixtures and resets test concessions instantaneously.",
@@ -580,10 +580,10 @@ def create_deck(output_path):
     add_header(slide10, "Business Impact", "Dispute Copilot: Transformative Value for E-Commerce Merchants", GREEN_ACCENT)
 
     impacts = [
-        ("80%+", "Capital Recovery", "Recovers legitimate merchant revenue under PayPal Seller Protection by presenting verified postal delivery proof.", GREEN_ACCENT),
-        ("90%", "Time Saved", "Cuts manual evidence gathering from 45 minutes down to a 30-second review and one-click submission.", CYAN_ACCENT),
-        ("0%", "Scoring Hallucination", "Mathematical rubric guarantees transparent, deterministic winnability scoring with strict citation guardrails.", ORANGE_ACCENT),
-        ("100%", "Human Control", "No accidental or unauthorized mutations; full merchant payload preview and audit trail accountability.", PURPLE_ACCENT),
+        ("65–80%", "Capital Recovery", "Helps recover contested revenue on verified fulfillments by presenting concrete carrier and signature proof under Seller Protection.", GREEN_ACCENT),
+        ("Up to 75%", "Time Saved", "Streamlines manual evidence gathering and packet drafting into a structured, single-screen review process.", CYAN_ACCENT),
+        ("Evidence-Grounded", "Fact Integrity", "Objective rubric scoring and fact-checking guardrails ensure cited claims match real fulfillment records.", ORANGE_ACCENT),
+        ("Merchant-Led", "Approval Required", "Every submission, partial refund, or concession requires explicit merchant review—no unmonitored automated actions.", PURPLE_ACCENT),
     ]
 
     for i, (val, title, body, col) in enumerate(impacts):
