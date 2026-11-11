@@ -23,7 +23,7 @@ Small business owners frequently forfeit valid disputes due to aggressive submis
 1. Ingesting payment disputes via the official **PayPal Customer Disputes API v1**.
 2. Correlating transactions with store order history to assemble a structured **Evidence Pack**.
 3. Evaluating defensibility with a **100% deterministic mathematical scoring engine (0–100)** with zero scoring hallucinations.
-4. Drafting cited, formal defense responses using a resilient **3-Tier AI Pipeline** (Groq &rarr; Google Gemini &rarr; Grounded Rule Engine).
+4. Drafting cited, formal defense responses using the **Groq AI Pipeline** (`openai/gpt-oss-120b`) with an offline **Grounded Rule Engine** safety net.
 5. Enforcing a strict **Human-in-the-Loop Safety Harness**—no evidence is submitted, concession granted, or refund issued without explicit merchant authorization.
 
 ---
@@ -33,38 +33,37 @@ Small business owners frequently forfeit valid disputes due to aggressive submis
 ```mermaid
 flowchart TD
     subgraph DataIngestion ["1. Data Ingestion & Correlation"]
-        PP[PayPal Disputes API v1<br/>or Fixture Payloads] --> Enricher[Dispute Correlation Engine]
-        Store[Store Catalog & Orders DB<br/>data/store.json] --> Enricher
-        Carrier[Carrier Tracking Events<br/>USPS / UPS / FedEx] --> Enricher
+        PP["PayPal Disputes API v1 or Fixtures"] --> Enricher["Dispute Correlation Engine"]
+        Store["Store Catalog & Orders DB (store.json)"] --> Enricher
+        Carrier["Carrier Tracking Events (USPS, UPS, FedEx)"] --> Enricher
     end
 
-    subgraph Evaluation ["2. Deterministic Scoring (0–100)"]
-        Enricher --> EvPack[Indexed Evidence Pack<br/>F1, F2, F3...]
-        EvPack --> Engine[Rubric Scoring Engine]
-        Engine -->|INR & SNAD Rubrics| Score[Score & Band Classification<br/>Strong 70+ | Medium 40-69 | Weak <40]
+    subgraph Evaluation ["2. Deterministic Scoring (0-100)"]
+        Enricher --> EvPack["Indexed Evidence Pack (F1, F2, F3...)"]
+        EvPack --> Engine["Rubric Scoring Engine"]
+        Engine -->|INR & SNAD Rubrics| Score["Score & Band: Strong (70+), Medium (40-69), Weak (&lt;40)"]
     end
 
-    subgraph AIAssistant ["3. Resilient 3-Tier AI Generation"]
-        Score --> Tier1[Tier 1: Groq AI<br/>openai/gpt-oss-120b]
-        Tier1 -->|Fallback on Rate Limit / Timeout| Tier2[Tier 2: Google Gemini<br/>gemini-2.5-flash]
-        Tier2 -->|Fallback on Network / 503| Tier3[Tier 3: Grounded Rule Engine<br/>Deterministic Local Generator]
-        Tier1 & Tier2 --> CitationValidator{Citation Validator<br/>Valid Fact IDs?}
-        CitationValidator -->|Hallucination Detected| PromptRetry[Corrective Prompt Retry]
-        PromptRetry --> Tier1
-        CitationValidator -->|Valid| Draft[Grounded Defense Draft]
-        Tier3 --> Draft
+    subgraph AIAssistant ["3. Groq AI Defense Pipeline"]
+        Score --> GroqAI["Primary: Groq AI (openai/gpt-oss-120b)"]
+        GroqAI -->|Rate Limit or Offline Fallback| RuleEngine["Safety Net: Grounded Rule Engine"]
+        GroqAI --> CitationValidator{"Citation Validator (Valid Fact IDs?)"}
+        CitationValidator -->|Hallucination Detected| PromptRetry["Corrective Prompt Retry"]
+        PromptRetry --> GroqAI
+        CitationValidator -->|Valid Citations| Draft["Grounded Defense Draft"]
+        RuleEngine --> Draft
     end
 
     subgraph HumanInTheLoop ["4. Human-in-the-Loop Safety Harness"]
-        Draft --> ReviewModal[Merchant Review Modal<br/>Payload Inspection & Strategy Recommendation]
-        ReviewModal -->|1. Fight & Defend| SubmitEvidence[Submit Evidence to PayPal]
-        ReviewModal -->|2. Propose Settlement| PartialOffer[Submit Partial Refund Offer]
-        ReviewModal -->|3. Concede & Accept| AcceptClaim[Accept Customer Claim]
+        Draft --> ReviewModal["Merchant Review Modal (Payload Inspection & Sign-off)"]
+        ReviewModal -->|1. Fight & Defend| SubmitEvidence["Submit Evidence to PayPal"]
+        ReviewModal -->|2. Propose Settlement| PartialOffer["Submit Partial Refund Offer"]
+        ReviewModal -->|3. Concede & Accept| AcceptClaim["Accept Customer Claim"]
     end
 
     subgraph Audit ["5. P&L & Audit Trail"]
-        SubmitEvidence & PartialOffer & AcceptClaim --> AuditTrail[Audit Activity Log<br/>activity-log.json]
-        SubmitEvidence & PartialOffer & AcceptClaim --> AGGrid[Lifetime AG Grid Dashboard<br/>P&L Realization & Win Rate]
+        SubmitEvidence & PartialOffer & AcceptClaim --> AuditTrail["Audit Activity Log (activity-log.json)"]
+        SubmitEvidence & PartialOffer & AcceptClaim --> AGGrid["Lifetime AG Grid Dashboard (P&L & Win Rate)"]
     end
 ```
 
