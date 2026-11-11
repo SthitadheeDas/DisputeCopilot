@@ -239,24 +239,17 @@ DisputeCopilot is deployed on Render as a high-performance decoupled 2-service a
 
 ---
 
-## 🤝 How to Contribute
+## 🔌 Merchant SDK Integration
 
-We welcome contributions from teammates! Follow these guidelines to keep work consistent and safe:
+DisputeCopilot provides pre-generated SDKs (Python & TypeScript via APIMatic) for fast integration into Shopify, WooCommerce, or custom platforms:
 
-1. **Create a Feature Branch**:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-2. **Keep Safety Flags Enabled**:
-   - Always develop with `DRY_RUN=true` to prevent accidental mutations to live or sandbox PayPal accounts.
-   - Use `DATA_MODE=fixture` for quick offline verification before testing against live Sandbox accounts.
-3. **Workspace Discipline**:
-   - If adding frontend dependencies, install inside the `web` workspace (`npm install <pkg> --workspace=web`).
-   - If adding backend dependencies, install inside the `server` workspace (`npm install <pkg> --workspace=server`).
-4. **Run Unit Tests**:
-   - Always run `npm run test` before opening a pull request to ensure scoring rubrics and fact validators pass.
-5. **Test Data Replenishment**:
-   - Use the **"Replenish Demo Data"** navbar button to verify that dispute mutations reset cleanly and state synchronizes properly.
+```typescript
+import { DisputeCopilotClient } from './sdks/typescript';
+
+const client = new DisputeCopilotClient({ apiKey: process.env.DISPUTE_COPILOT_KEY });
+const result = await client.disputes.evaluate('PP-D-1002');
+console.log(result.score, result.defenseDraft);
+```
 
 ---
 
