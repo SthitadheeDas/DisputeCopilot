@@ -123,53 +123,6 @@ flowchart TD
 
 ---
 
-## 📁 Repository Structure
-
-```text
-DisputeCopilot/
-├── data/
-│   ├── store.json               # Simulated merchant catalog, orders, tracking & customer chat
-│   ├── fixtures/disputes.json   # PayPal Customer Disputes v1 payloads (INR & SNAD scenarios)
-│   ├── analysis-cache.json      # Cache for generated AI defense drafts
-│   └── activity-log.json        # Merchant approval and submission audit trail
-├── docs/
-│   └── PROJECT_BRIEF.md         # Specification, evaluation rubrics & project notes
-├── portal/                      # APIMatic interactive developer documentation portal
-├── sdks/                        # Client SDK libraries
-│   ├── python/                  # Generated Python SDK
-│   └── typescript/              # Generated TypeScript SDK
-├── server/                      # Express backend service
-│   ├── src/
-│   │   ├── ai/                  # 3-tier AI engine (Groq, Gemini, Rule Engine fallback)
-│   │   ├── paypal/              # PayPal Sandbox OAuth 2.0 client & REST endpoints
-│   │   ├── routes/              # Express API endpoints (/health, /disputes, /activity)
-│   │   ├── scoring/             # Deterministic rubric scoring engine & Vitest unit tests
-│   │   ├── store/               # In-memory & file storage persistence managers
-│   │   ├── types/               # TypeScript domain interfaces
-│   │   ├── config.ts            # Environment variable configuration
-│   │   └── index.ts             # Express server entrypoint & rate limiting
-│   ├── package.json
-│   └── tsconfig.json
-├── web/                         # React frontend service
-│   ├── src/
-│   │   ├── components/          # UI components (DisputeTable, DisputeDetailModal, AnalyticsTab)
-│   │   ├── data/                # Lifetime transactions data for AG Grid
-│   │   ├── utils/               # Date formatting and order data mapping utilities
-│   │   ├── api.ts               # Typed client for backend endpoints
-│   │   ├── types.ts             # Frontend TypeScript definitions
-│   │   ├── App.tsx              # Main dashboard application
-│   │   └── main.tsx             # React entrypoint
-│   ├── package.json
-│   ├── vite.config.ts           # Vite proxy & manual Rollup chunking
-│   └── tailwind.config.js
-├── .env.example                 # Environment variables template
-├── openapi.yaml                 # OpenAPI 3.0 specification
-├── package.json                 # Monorepo workspaces definition
-└── README.md
-```
-
----
-
 ## 🚀 Getting Started
 
 ### Prerequisites
