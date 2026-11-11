@@ -72,7 +72,7 @@ flowchart TD
 ## 🌟 Key Capabilities
 
 ### 🛡️ Deterministic Winnability Engine (0–100)
-- **Zero Hallucination Scoring**: Evaluates dispute defensibility using a pure mathematical rubric without relying on LLMs for calculations.
+- **Grounded Scoring**: Evaluates dispute defensibility using a pure mathematical rubric without relying on LLMs for calculations.
 - **Multi-Reason Support**:
   - **Item Not Received (`MERCHANDISE_OR_SERVICE_NOT_RECEIVED`)**: Evaluates carrier tracking existence, delivery confirmation timestamps relative to dispute creation, recipient signature proof, destination city/state match, customer complaint history prior to transit, and prior concessions.
   - **Not As Described (`MERCHANDISE_OR_SERVICE_NOT_AS_DESCRIBED`)**: Evaluates catalog listing detail sufficiency, published checkout return policies, pre-delivery customer messages, authentic item condition disclosures, and confirmed buyer possession.
