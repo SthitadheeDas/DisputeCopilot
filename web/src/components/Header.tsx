@@ -31,9 +31,12 @@ export const Header: React.FC<HeaderProps> = ({
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-baseline space-x-2">
                 <span className="font-black text-xl tracking-wider text-slate-900">
                   VERIF<span className="text-blue-600">AI</span>
+                </span>
+                <span className="text-xs font-medium text-slate-400">
+                  Dispute Copilot for Merchants
                 </span>
               </div>
               <p className="text-xs text-slate-500">Autonomous Merchant Defense System</p>

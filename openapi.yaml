@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: Dispute Copilot API
+  title: VERIFAI Dispute Copilot API
   description: |
-    REST API for **Dispute Copilot**, an autonomous merchant defense assistant built for the PayPal AI Hackathon.
+    REST API for **VERIFAI (Dispute Copilot for Merchants)**, an autonomous merchant defense and intelligence assistant built for the PayPal AI Hackathon.
     It correlates active PayPal payment disputes with store order fulfillment records, calculates deterministic
-    winnability scores (0–100), synthesizes grounded Evidence Packs, and generates defense response drafts using Gemini AI.
+    winnability scores (0–100), synthesizes grounded Evidence Packs, and generates defense response drafts using the Groq AI Pipeline and Gemini.
   version: 1.0.0
   contact:
     name: Dispute Copilot Team
@@ -50,7 +50,7 @@ paths:
                 status: ok
                 dataMode: sandbox
                 dryRun: true
-                geminiModel: gemini-3.8-flash
+                geminiModel: gemini-2.5-flash
                 groqModel: openai/gpt-oss-120b
                 hasPayPalCredentials: true
                 hasGeminiKey: true
