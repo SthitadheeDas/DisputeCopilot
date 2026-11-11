@@ -1,4 +1,4 @@
-# Dispute Copilot 🛡️
+# VERIFAI 🛡️
 
 > **Autonomous Merchant Defense & Intelligence System for PayPal Payment Disputes**
 
@@ -41,7 +41,7 @@ flowchart TD
     subgraph Evaluation ["2. Deterministic Scoring (0-100)"]
         Enricher --> EvPack["Indexed Evidence Pack (F1, F2, F3...)"]
         EvPack --> Engine["Rubric Scoring Engine"]
-        Engine -->|INR & SNAD Rubrics| Score["Score & Band: Strong (70+), Medium (40-69), Weak (&lt;40)"]
+        Engine -->|INR and SNAD Rubrics| Score["Score & Band: Strong (70+), Medium (40-69), Weak (under 40)"]
     end
 
     subgraph AIAssistant ["3. Groq AI Defense Pipeline"]
@@ -62,8 +62,12 @@ flowchart TD
     end
 
     subgraph Audit ["5. P&L & Audit Trail"]
-        SubmitEvidence & PartialOffer & AcceptClaim --> AuditTrail["Audit Activity Log (activity-log.json)"]
-        SubmitEvidence & PartialOffer & AcceptClaim --> AGGrid["Lifetime AG Grid Dashboard (P&L & Win Rate)"]
+        SubmitEvidence --> AuditTrail["Audit Activity Log (activity-log.json)"]
+        PartialOffer --> AuditTrail
+        AcceptClaim --> AuditTrail
+        SubmitEvidence --> AGGrid["Lifetime AG Grid Dashboard (P&L & Win Rate)"]
+        PartialOffer --> AGGrid
+        AcceptClaim --> AGGrid
     end
 ```
 

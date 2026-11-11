@@ -32,8 +32,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-bold text-xl tracking-tight text-slate-900">
-                  Dispute<span className="text-blue-600">Copilot</span>
+                <span className="font-black text-xl tracking-wider text-slate-900">
+                  VERIF<span className="text-blue-600">AI</span>
                 </span>
               </div>
               <p className="text-xs text-slate-500">Autonomous Merchant Defense System</p>

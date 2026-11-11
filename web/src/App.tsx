@@ -291,7 +291,7 @@ export const App: React.FC = () => {
             {loading ? (
               <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center">
                 <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-                <h4 className="font-bold text-slate-800 text-sm">Loading Dispute Copilot...</h4>
+                <h4 className="font-bold text-slate-800 text-sm">Loading VERIFAI...</h4>
                 <p className="text-xs text-slate-400 mt-1">
                   Pulling active claims, matching orders, and computing deterministic rubric scores
                 </p>
@@ -321,7 +321,7 @@ export const App: React.FC = () => {
       <footer className="border-t border-slate-200 bg-white py-6 mt-12 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-1">
           <p className="font-medium text-slate-700">
-            Dispute Copilot &bull; Built for the PayPal AI Hackathon
+            VERIFAI &bull; Built for the PayPal AI Hackathon
           </p>
           <p className="text-slate-400">
             Note: Store order fulfillment data is simulated in <code className="bg-slate-100 px-1 py-0.5 rounded">data/store.json</code>. PayPal Dispute API communication runs in Sandbox environment.

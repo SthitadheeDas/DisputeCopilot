@@ -14,7 +14,7 @@ export const JudgeIntroBanner: React.FC = () => {
           <div>
             <div className="flex items-center space-x-2">
               <h2 className="text-base font-bold text-slate-900">
-                What is Dispute Copilot?
+                What is VERIFAI?
               </h2>
               <span className="text-xs bg-blue-100 text-blue-800 font-semibold px-2 py-0.5 rounded-full">
                 Hackathon Overview
@@ -22,7 +22,7 @@ export const JudgeIntroBanner: React.FC = () => {
             </div>
             <p className="text-sm text-slate-600 mt-1">
               An intelligent dispute defense assistant that joins PayPal payment disputes with store order data,
-              computes a <strong>deterministic winnability score (0–100)</strong>, and drafts evidence-backed responses using Gemini with mandatory human approval.
+              computes a <strong>deterministic winnability score (0–100)</strong>, and drafts evidence-backed responses using Groq AI with mandatory human approval.
             </p>
           </div>
         </div>
