@@ -263,7 +263,7 @@ Dispute Copilot is deployed on Render as a decoupled two-tier architecture:
 - ⚡ **Backend API Service (Node.js)**: `https://disputecopilot.onrender.com`
 
 ## 💡 **Service Warmth & Availability Notice:**  
-> To prevent Render free-tier backend instances from entering sleep mode after inactivity, an automated keep-alive cron job (GitHub Actions / UptimeRobot) pings the `/health` endpoint (`https://disputecopilot.onrender.com/api/health`) every 5 minutes. This ensures sub-second API response times during evaluation.
+> To prevent Render free-tier backend instances from entering sleep mode after inactivity, an external cron job (https://cron-job.org/en/) pings the `/health` endpoint (`https://disputecopilot.onrender.com/api/health`) every 5 minutes. This ensures sub-second API response times during evaluation.
 ---
 
 ## ⚖️ License
