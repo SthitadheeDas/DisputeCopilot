@@ -16,7 +16,9 @@ Per strict safety guidelines, **no actions or evidence are submitted without exp
 - **Human-In-The-Loop Safety Guardrail**: Actions require merchant confirmation. A payload preview dialog displays the exact JSON transmitted before sending.
 - **Safety Flags (`DRY_RUN`)**: When `DRY_RUN=true`, mutations to PayPal are simulated and logged in the immutable audit trail without modifying live account state.
 - **Data Source Transparency**: Distinct badges clearly indicate whether the application is running against live **PayPal Sandbox** or simulated **Fixture data**.
-- **Single Deployable Architecture**: Express backend serves the optimized React + Vite + Tailwind frontend in production as one unified service.
+- **Decoupled 2-Service Architecture**: Deployed as a high-performance decoupled 2-service setup:
+  - **Frontend Service**: Static Site (`DisputeCopilot_Front`) hosted globally on Render CDN.
+  - **Backend API Service**: Node.js / Express Web Service (`DisputeCopilot`) hosted in Singapore.
 
 > [!NOTE]
 > **Simulated Store Notice**: Store order data (items, carrier tracking, customer chat history) is simulated in `data/store.json`. PayPal dispute data connects to the official PayPal Sandbox API (`api-m.sandbox.paypal.com`) or runs offline via `data/fixtures/disputes.json`.
@@ -165,43 +167,38 @@ npm run dev
 - **Frontend**: [http://localhost:5173](http://localhost:5173) (proxies `/api` to backend)
 - **Backend API**: [http://localhost:3000](http://localhost:3000)
 
-### Production Build & Single Service Run
+### Production Build
 
-Build the React frontend and TypeScript server into a unified deployable service:
+Build the React frontend and TypeScript server:
 
 ```bash
 # Build web and server
 npm run build
 
-# Start production server
+# Start backend server
 npm run start
 ```
 
-Access the complete application at [http://localhost:3000](http://localhost:3000).
-
 ---
 
-## ☁️ Deploying on Render
+## ☁️ Live Architecture & Deployment
 
-Dispute Copilot is structured to deploy as a single **Web Service** on [Render](https://render.com):
+DisputeCopilot is deployed on Render as a high-performance decoupled 2-service architecture:
 
-1. Connect your GitHub repository to Render.
-2. Select **Web Service** with the following settings:
-   - **Environment**: `Node`
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm run start`
-3. Under **Environment Variables**, add:
-   - `DATA_MODE`: `sandbox` (or `fixture`)
-   - `DRY_RUN`: `true`
-   - `PAYPAL_CLIENT_ID`: `[Your PayPal Client ID]`
-   - `PAYPAL_CLIENT_SECRET`: `[Your PayPal Client Secret]`
-   - `PAYPAL_BASE_URL`: `https://api-m.sandbox.paypal.com`
-   - `GROQ_API_KEY`: `[Your Groq API Key (Primary)]`
-   - `GROQ_MODEL`: `openai/gpt-oss-120b` (or `llama-3.3-70b-versatile`)
-   - `GEMINI_API_KEY`: `[Your Gemini API Key (Secondary Fallback)]`
-   - `GEMINI_MODEL`: `gemini-3.8-flash`
-   - `PORT`: `10000` (Render's default)
-4. Click **Create Web Service**.
+* 🌐 **Frontend App (Static Site):** [https://disputecopilot-front.onrender.com](https://disputecopilot-front.onrender.com)
+* ⚡ **Backend API (Node.js Service):** `https://disputecopilot.onrender.com`
+
+### Environment Configuration (Backend Service)
+
+| Variable | Value |
+| :--- | :--- |
+| `PORT` | `10000` |
+| `DATA_MODE` | `fixture` *(recommended for demo evaluation)* or `sandbox` |
+| `DRY_RUN` | `true` *(ensures non-destructive submissions)* |
+| `GROQ_API_KEY` | `your_groq_api_key` *(Primary AI)* |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` |
+| `GEMINI_API_KEY` | `your_gemini_api_key` *(Secondary Fallback)* |
+| `GEMINI_MODEL` | `gemini-3.8-flash` |
 
 ---
 
