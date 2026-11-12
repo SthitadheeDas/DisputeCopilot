@@ -322,8 +322,10 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             <div className="font-bold text-slate-900 text-xs">{params.value}</div>
             <div className="text-[11px] text-slate-400 font-mono flex items-center space-x-1">
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  e.nativeEvent?.stopImmediatePropagation?.();
                   if (params.data) handleViewOrder(params.data);
                 }}
                 className="hover:text-blue-600 hover:underline cursor-pointer font-bold text-slate-500"
@@ -340,14 +342,17 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       {
         headerName: 'Order Details',
         field: 'orderId',
+        colId: 'orderId',
         width: 135,
         cellRenderer: (params: { data?: UnifiedTransactionRow }) => {
           if (!params.data) return null;
           return (
             <div className="pt-0.5">
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  e.nativeEvent?.stopImmediatePropagation?.();
                   if (params.data) {
                     handleViewOrder(params.data);
                   }
@@ -521,14 +526,20 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         },
         {
           headerName: 'Action',
+          colId: 'action',
           width: 115,
           pinned: 'right',
           cellRenderer: (params: { data?: UnifiedTransactionRow }) => {
             if (!params.data?.rawDispute) return null;
             return (
               <button
-                onClick={() => onSelectDispute(params.data!.rawDispute!)}
-                className="inline-flex items-center space-x-1 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent?.stopImmediatePropagation?.();
+                  onSelectDispute(params.data!.rawDispute!);
+                }}
+                className="inline-flex items-center space-x-1 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors cursor-pointer"
               >
                 <span>Review</span>
                 <ArrowRight className="w-3 h-3" />
@@ -545,6 +556,30 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   }, [filterMode, onSelectDispute, handleViewOrder]);
 
   const onRowClicked = (event: RowClickedEvent<UnifiedTransactionRow>) => {
+    const targetElement = event.event?.target as HTMLElement | null;
+
+    // 1. If a button inside a cell was clicked (e.g. View Order button or Review button), let the button handle it
+    if (targetElement?.closest('button') || targetElement?.tagName === 'BUTTON') {
+      return;
+    }
+
+    // 2. If clicking on Order Details column or Customer column cell, always open Order Details
+    if (targetElement?.closest('[col-id="orderId"]') || targetElement?.closest('[col-id="customer"]')) {
+      if (event.data) {
+        handleViewOrder(event.data);
+      }
+      return;
+    }
+
+    // 3. If clicking on Action column cell, open Dispute Case Review
+    if (targetElement?.closest('[col-id="action"]')) {
+      if (event.data?.rawDispute) {
+        onSelectDispute(event.data.rawDispute);
+      }
+      return;
+    }
+
+    // 4. For generic row background clicks:
     if (event.data?.rawDispute && filterMode === 'disputed') {
       onSelectDispute(event.data.rawDispute);
     } else if (event.data) {
