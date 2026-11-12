@@ -22,7 +22,7 @@ import {
   CheckCircle2,
   Filter,
 } from 'lucide-react';
-import { EnrichedDispute } from '../types';
+import { EnrichedDispute, isDisputeActive } from '../types';
 import { LIFETIME_CLEAN_TRANSACTIONS } from '../data/lifetimeTransactions';
 import { OrderDetailModal } from './OrderDetailModal';
 import { buildOrderDetailViewData, OrderDetailViewData } from '../utils/orderData';
@@ -113,6 +113,16 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             ? 'Settled'
             : 'Fought via Groq AI';
         moneyGained = 0;
+        moneyLost = 0;
+      } else if (
+        statusUpper === 'RESOLVED_DEFENDED' ||
+        statusUpper === 'SUBMITTED' ||
+        statusUpper === 'DEFENDED'
+      ) {
+        // Merchant defended with grounded evidence
+        actionTaken = 'Fought via Groq AI';
+        disputeStatus = 'Won';
+        moneyGained = stake;
         moneyLost = 0;
       } else if (
         statusUpper === 'CONCEDED' ||
@@ -527,10 +537,32 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         {
           headerName: 'Action',
           colId: 'action',
-          width: 115,
+          width: 130,
           pinned: 'right',
           cellRenderer: (params: { data?: UnifiedTransactionRow }) => {
             if (!params.data?.rawDispute) return null;
+            const active = isDisputeActive(params.data.rawDispute);
+            if (!active) {
+              const statusUpper = (params.data.rawDispute.status || '').toUpperCase();
+              const isConceded = statusUpper === 'CONCEDED' || statusUpper === 'RESOLVED_ACCEPTED';
+              const isSettled = statusUpper === 'REFUNDED';
+              const label = isConceded ? 'Conceded' : isSettled ? 'Settled' : 'Submitted';
+              return (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.nativeEvent?.stopImmediatePropagation?.();
+                    onSelectDispute(params.data!.rawDispute!);
+                  }}
+                  className="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-300 transition-colors cursor-pointer shadow-2xs"
+                  title="Dispute resolution recorded in PayPal audit log. Click to inspect submitted evidence."
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{label}</span>
+                </button>
+              );
+            }
             return (
               <button
                 type="button"

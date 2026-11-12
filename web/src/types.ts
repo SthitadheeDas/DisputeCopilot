@@ -115,3 +115,30 @@ export interface ActivityLogEntry {
   response?: Record<string, unknown>;
   error?: string;
 }
+
+// Active dispute check: Filters out resolved, conceded, or closed claims
+export const isDisputeActive = (d: EnrichedDispute): boolean => {
+  const status = (d.status || '').toUpperCase();
+  const lifecycle = (d.dispute_lifecycle_stage || '').toUpperCase();
+  const state = (d.dispute_state || '').toUpperCase();
+
+  if (
+    status === 'RESOLVED' ||
+    status === 'RESOLVED_ACCEPTED' ||
+    status === 'RESOLVED_DEFENDED' ||
+    status === 'SUBMITTED' ||
+    status === 'REFUNDED' ||
+    status === 'DEFENDED' ||
+    status === 'CONCEDED' ||
+    status === 'CLOSED' ||
+    status === 'UNDER_REVIEW' ||
+    status === 'NO_ACTION_REQUIRED' ||
+    lifecycle === 'RESOLVED' ||
+    state === 'RESOLVED' ||
+    state === 'NO_ACTION_REQUIRED'
+  ) {
+    return false;
+  }
+  return true;
+};
+
