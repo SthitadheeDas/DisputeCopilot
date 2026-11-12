@@ -1,0 +1,239 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
+  <defs>
+    <!-- Background Soft Gradient -->
+    <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="60%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#EEF2F6" />
+    </linearGradient>
+
+    <!-- App Icon Gradient -->
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="45%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#1E40AF" />
+    </linearGradient>
+
+    <!-- AI Text Gradient -->
+    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+
+    <!-- Glassmorphic Card 1 Gradient -->
+    <linearGradient id="glass1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#F1F5F9" stop-opacity="0.85" />
+    </linearGradient>
+
+    <!-- Glassmorphic Card 2 Gradient -->
+    <linearGradient id="glass2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.98" />
+      <stop offset="100%" stop-color="#F8FAFC" stop-opacity="0.90" />
+    </linearGradient>
+
+    <!-- Success Trend Gradient -->
+    <linearGradient id="trendGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#10B981" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Ambient Blue Glow -->
+    <radialGradient id="ambientGlow" cx="50%" cy="85%" r="45%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.30" />
+      <stop offset="50%" stop-color="#2563EB" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#2563EB" stop-opacity="0.0" />
+    </radialGradient>
+
+    <!-- Card Shadow -->
+    <filter id="shadowMain" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#0F172A" flood-opacity="0.08" />
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.04" />
+    </filter>
+
+    <filter id="floatShadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#1E293B" flood-opacity="0.10" />
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1E293B" flood-opacity="0.05" />
+    </filter>
+
+    <filter id="iconGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#2563EB" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Canvas Outer Background -->
+  <rect width="1024" height="1024" fill="#E2E8F0" />
+
+  <!-- Main Showcase Rounded Card -->
+  <rect x="36" y="36" width="952" height="952" rx="48" fill="url(#cardBg)" stroke="#CBD5E1" stroke-width="1.5" filter="url(#shadowMain)" />
+
+  <!-- Ambient Light Reflection in Lower Section -->
+  <ellipse cx="512" cy="850" rx="380" ry="160" fill="url(#ambientGlow)" />
+
+  <!-- ================= TOP SECTION ================= -->
+
+  <!-- Top App Squircle Icon -->
+  <g id="top-icon" transform="translate(432, 80)">
+    <rect width="160" height="160" rx="44" fill="url(#iconGrad)" filter="url(#iconGlow)" />
+    <!-- Inner Shield Outline & Checkmark -->
+    <path d="M 80 34 
+             C 108 50, 126 56, 126 84 
+             C 126 118, 100 142, 80 150 
+             C 60 142, 34 118, 34 84 
+             C 34 56, 52 50, 80 34 Z" 
+          fill="none" stroke="#FFFFFF" stroke-width="6.5" stroke-linejoin="round" />
+    <path d="M 60 88 L 74 102 L 102 74" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- Typography Block -->
+  <!-- 1. VERIFAI Primary Logo -->
+  <text x="512" y="325" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="950" font-size="74" letter-spacing="3">
+    <tspan fill="#0F172A">VERIF</tspan><tspan fill="url(#aiGrad)">AI</tspan>
+  </text>
+
+  <!-- 2. Dispute Copilot for Merchants -->
+  <text x="512" y="385" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="800" font-size="36" fill="#1E293B" letter-spacing="0.5">
+    Dispute Copilot for Merchants
+  </text>
+
+  <!-- 3. Subtitle / Tagline -->
+  <text x="512" y="428" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="600" font-size="24" fill="#64748B" letter-spacing="1.2">
+    Autonomous Dispute Defense System
+  </text>
+
+  <!-- ================= LOWER SECTION: 3D FLOATING FINTECH UI ================= -->
+
+  <!-- Neural AI Nodes Background (Connecting lines) -->
+  <g id="neural-circuits" stroke="#93C5FD" stroke-width="2" stroke-dasharray="4 4" opacity="0.7">
+    <line x1="280" y1="620" x2="210" y2="720" />
+    <line x1="210" y1="720" x2="280" y2="790" />
+    <line x1="720" y1="580" x2="800" y2="670" />
+    <line x1="800" y1="670" x2="730" y2="760" />
+    <line x1="800" y1="670" x2="860" y2="630" />
+  </g>
+
+  <!-- Left AI Node Cluster -->
+  <g id="node-left" transform="translate(170, 680)">
+    <circle cx="40" cy="40" r="32" fill="#2563EB" opacity="0.1" />
+    <circle cx="40" cy="40" r="22" fill="#2563EB" filter="url(#floatShadow)" />
+    <path d="M 32 40 L 38 46 L 49 35" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+    <circle cx="10" cy="15" r="7" fill="#38BDF8" />
+    <circle cx="70" cy="20" r="6" fill="#60A5FA" />
+    <circle cx="65" cy="70" r="8" fill="#10B981" />
+  </g>
+
+  <!-- Right AI Node Cluster -->
+  <g id="node-right" transform="translate(760, 630)">
+    <circle cx="40" cy="40" r="32" fill="#2563EB" opacity="0.1" />
+    <circle cx="40" cy="40" r="22" fill="#2563EB" filter="url(#floatShadow)" />
+    <path d="M 32 40 L 38 46 L 49 35" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+    <circle cx="70" cy="10" r="7" fill="#38BDF8" />
+    <circle cx="10" cy="65" r="6" fill="#34D399" />
+  </g>
+
+  <!-- CARD 1: Left / Background "Secure Invoice & Order" -->
+  <g id="card-invoice" transform="translate(250, 500) rotate(-4 135 170)" filter="url(#floatShadow)">
+    <rect width="270" height="340" rx="20" fill="url(#glass1)" stroke="#E2E8F0" stroke-width="1.5" />
+    <!-- Header Pill -->
+    <rect x="20" y="22" width="105" height="26" rx="13" fill="#EFF6FF" />
+    <text x="72" y="39" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="11" fill="#2563EB">SECURE INVOICE</text>
+    <rect x="225" y="22" width="24" height="24" rx="12" fill="#10B981" />
+    <path d="M 231 34 L 235 38 L 243 30" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" />
+
+    <!-- Invoice Lines -->
+    <rect x="20" y="68" width="160" height="10" rx="5" fill="#E2E8F0" />
+    <rect x="20" y="90" width="230" height="6" rx="3" fill="#F1F5F9" />
+    <rect x="20" y="106" width="210" height="6" rx="3" fill="#F1F5F9" />
+    <rect x="20" y="122" width="180" height="6" rx="3" fill="#F1F5F9" />
+
+    <!-- Order Items Divider -->
+    <line x1="20" y1="145" x2="250" y2="145" stroke="#E2E8F0" stroke-width="1" />
+    <text x="20" y="172" font-family="sans-serif" font-weight="600" font-size="13" fill="#475569">Item Fulfillments</text>
+    <rect x="20" y="185" width="140" height="8" rx="4" fill="#E2E8F0" />
+    <rect x="20" y="202" width="110" height="8" rx="4" fill="#E2E8F0" />
+
+    <!-- Price Tag & Button -->
+    <text x="20" y="260" font-family="sans-serif" font-weight="800" font-size="28" fill="#0F172A">$350.00</text>
+    <text x="20" y="278" font-family="sans-serif" font-weight="600" font-size="10" fill="#10B981">✓ Verified Carrier Delivery</text>
+
+    <rect x="20" y="295" width="230" height="30" rx="8" fill="#2563EB" />
+    <text x="135" y="314" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="12" fill="#FFFFFF">MATCHED EVIDENCE</text>
+  </g>
+
+  <!-- CARD 2: Center "Checkout & Dispute Resolved" -->
+  <g id="card-checkout" transform="translate(370, 550)" filter="url(#floatShadow)">
+    <rect width="320" height="290" rx="22" fill="url(#glass2)" stroke="#E2E8F0" stroke-width="1.8" />
+    <!-- Browser Dots -->
+    <circle cx="25" cy="24" r="5" fill="#EF4444" />
+    <circle cx="42" cy="24" r="5" fill="#F59E0B" />
+    <circle cx="59" cy="24" r="5" fill="#10B981" />
+    <text x="90" y="28" font-family="sans-serif" font-weight="700" font-size="13" fill="#334155">PayPal Claims Resolution</text>
+
+    <!-- Success Resolution Banner -->
+    <rect x="20" y="52" width="280" height="46" rx="12" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.2" />
+    <rect x="32" y="63" width="24" height="24" rx="12" fill="#10B981" />
+    <path d="M 38 75 L 43 79 L 51 71" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" />
+    <text x="68" y="75" font-family="sans-serif" font-weight="800" font-size="13" fill="#166534">DISPUTE RESOLVED</text>
+    <text x="68" y="90" font-family="sans-serif" font-weight="600" font-size="10" fill="#15803D">Seller Protection Applied • Capital Preserved</text>
+
+    <!-- Details Breakdown -->
+    <text x="24" y="128" font-family="sans-serif" font-weight="600" font-size="12" fill="#64748B">Transaction</text>
+    <text x="296" y="128" text-anchor="end" font-family="sans-serif" font-weight="700" font-size="12" fill="#0F172A">PP-D-1002 (INR)</text>
+
+    <text x="24" y="152" font-family="sans-serif" font-weight="600" font-size="12" fill="#64748B">Deterministic Score</text>
+    <text x="296" y="152" text-anchor="end" font-family="sans-serif" font-weight="800" font-size="12" fill="#2563EB">85/100 (Strong)</text>
+
+    <text x="24" y="176" font-family="sans-serif" font-weight="600" font-size="12" fill="#64748B">AI Defense Strategy</text>
+    <text x="296" y="176" text-anchor="end" font-family="sans-serif" font-weight="700" font-size="12" fill="#10B981">FIGHT &amp; DEFEND</text>
+
+    <!-- Form Mock Fields -->
+    <rect x="20" y="196" width="135" height="34" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" />
+    <text x="32" y="217" font-family="sans-serif" font-weight="600" font-size="10" fill="#94A3B8">Tracking Verified</text>
+    <rect x="165" y="196" width="135" height="34" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" />
+    <text x="177" y="217" font-family="sans-serif" font-weight="600" font-size="10" fill="#94A3B8">Signature Verified</text>
+
+    <rect x="20" y="242" width="280" height="34" rx="10" fill="#0F172A" />
+    <text x="160" y="264" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="12" fill="#FFFFFF">AUTONOMOUS PACKET SUBMITTED</text>
+  </g>
+
+  <!-- CARD 3: Right / Foreground "Success Rate & Financial Analytics" -->
+  <g id="card-analytics" transform="translate(540, 640) rotate(3 150 140)" filter="url(#floatShadow)">
+    <rect width="290" height="240" rx="20" fill="url(#glass1)" stroke="#E2E8F0" stroke-width="1.8" />
+    <!-- Header -->
+    <circle cx="22" cy="24" r="4" fill="#3B82F6" />
+    <circle cx="34" cy="24" r="4" fill="#38BDF8" />
+    <text x="50" y="28" font-family="sans-serif" font-weight="800" font-size="13" fill="#0F172A">Merchant Success Rate</text>
+    <rect x="215" y="14" width="60" height="20" rx="10" fill="#ECFDF5" />
+    <text x="245" y="28" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="10" fill="#059669">+15$ Saved</text>
+
+    <!-- KPI Metric -->
+    <text x="22" y="68" font-family="sans-serif" font-weight="900" font-size="32" fill="#0F172A">78.4%</text>
+    <text x="135" y="64" font-family="sans-serif" font-weight="600" font-size="11" fill="#10B981">▲ Realized Recovery</text>
+
+    <!-- Upward Trend Chart -->
+    <path d="M 22 180 
+             C 60 170, 90 140, 130 145 
+             C 170 150, 200 110, 240 100 
+             L 270 90" 
+          fill="none" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" />
+    
+    <!-- Area Under Curve -->
+    <path d="M 22 180 
+             C 60 170, 90 140, 130 145 
+             C 170 150, 200 110, 240 100 
+             L 270 90 
+             L 270 190 
+             L 22 190 Z" 
+          fill="url(#trendGrad)" />
+
+    <!-- Chart Dots -->
+    <circle cx="130" cy="145" r="4" fill="#10B981" />
+    <circle cx="240" cy="100" r="4" fill="#10B981" />
+    <circle cx="270" cy="90" r="5" fill="#34D399" />
+
+    <!-- Footer Stats -->
+    <text x="22" y="215" font-family="sans-serif" font-weight="600" font-size="10" fill="#94A3B8">0% Fraud Exposure</text>
+    <text x="270" y="215" text-anchor="end" font-family="sans-serif" font-weight="700" font-size="10" fill="#2563EB">Verified by VERIFAI</text>
+  </g>
+
+</svg>
