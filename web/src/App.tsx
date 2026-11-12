@@ -277,6 +277,7 @@ export const App: React.FC = () => {
               <DisputeTable
                 disputes={activeDisputes}
                 onSelectDispute={(dispute) => setSelectedDispute(dispute)}
+                onResetDemo={handleResetDemoData}
               />
             )}
           </div>

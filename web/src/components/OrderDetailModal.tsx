@@ -19,7 +19,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { OrderDetailViewData } from '../utils/orderData';
-import { EnrichedDispute } from '../types';
+import { EnrichedDispute, isDisputeActive } from '../types';
 
 interface OrderDetailModalProps {
   order: OrderDetailViewData;
@@ -455,10 +455,23 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   onClose();
                   onReviewDispute(order.rawDispute!);
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer flex items-center space-x-1.5"
+                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer flex items-center space-x-1.5 ${
+                  isDisputeActive(order.rawDispute)
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                }`}
               >
-                <span>Review Dispute Case</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                {isDisputeActive(order.rawDispute) ? (
+                  <>
+                    <span>Review Dispute Case</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>View Submitted Evidence</span>
+                  </>
+                )}
               </button>
             )}
             <button

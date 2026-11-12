@@ -7,17 +7,20 @@ import {
   ShieldCheck,
   Package,
   User,
+  RotateCcw,
 } from 'lucide-react';
 import { EnrichedDispute, ScoreBand } from '../types';
 
 interface DisputeTableProps {
   disputes: EnrichedDispute[];
   onSelectDispute: (dispute: EnrichedDispute) => void;
+  onResetDemo?: () => void;
 }
 
 export const DisputeTable: React.FC<DisputeTableProps> = ({
   disputes,
   onSelectDispute,
+  onResetDemo,
 }) => {
   // Format live deadline countdown
   const renderDeadlineBadge = (hoursRemaining: number, dueDateStr: string) => {
@@ -131,14 +134,25 @@ export const DisputeTable: React.FC<DisputeTableProps> = ({
       </div>
 
       {disputes.length === 0 ? (
-        <div className="p-12 text-center space-y-3">
+        <div className="p-12 text-center space-y-4">
           <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
             <ShieldCheck className="w-6 h-6" />
           </div>
-          <h4 className="font-bold text-slate-800 text-sm">All Disputes Resolved</h4>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            Zero active customer claims requiring merchant response. All disputes have been conceded, settled, or defended. View the Analytics tab for lifetime financial tracking.
-          </p>
+          <div>
+            <h4 className="font-bold text-slate-800 text-sm">All Disputes Resolved</h4>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
+              Zero active customer claims requiring merchant response. All disputes have been conceded, settled, or defended.
+            </p>
+          </div>
+          {onResetDemo && (
+            <button
+              onClick={onResetDemo}
+              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Replenish Demo Disputes (Reset to 6 Active)</span>
+            </button>
+          )}
         </div>
       ) : (
         <div className="overflow-x-auto">
