@@ -51,7 +51,7 @@ export interface UnifiedTransactionRow {
   // Disputed Extra P&L Fields
   disputeId?: string;
   stakeAmount?: number;
-  actionTaken?: 'Fought via Groq AI' | 'Conceded' | 'Settled';
+  actionTaken?: 'Pending Action' | 'Fought via Groq AI' | 'Conceded' | 'Settled';
   moneyGained?: number;
   moneyLost?: number;
   netImpact?: number;
@@ -98,20 +98,15 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       // Standard PayPal chargeback/dispute fee is $15.00
       const PAYPAL_DISPUTE_FEE = 15.0;
 
-      let actionTaken: 'Fought via Groq AI' | 'Conceded' | 'Settled' = 'Fought via Groq AI';
+      let actionTaken: 'Pending Action' | 'Fought via Groq AI' | 'Conceded' | 'Settled' = 'Pending Action';
       let disputeStatus: 'Clean' | 'Active' | 'Won' | 'Lost' = 'Active';
       let moneyGained = 0;
       let moneyLost = 0;
 
       if (!isResolved) {
-        // Active dispute under review: P&L not yet realized
+        // Active dispute under review: No merchant action taken yet
         disputeStatus = 'Active';
-        actionTaken =
-          aiRec === 'accept'
-            ? 'Conceded'
-            : aiRec === 'partial_offer'
-            ? 'Settled'
-            : 'Fought via Groq AI';
+        actionTaken = 'Pending Action';
         moneyGained = 0;
         moneyLost = 0;
       } else if (
@@ -458,7 +453,15 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           headerName: 'Action Taken',
           field: 'actionTaken',
           width: 175,
-          cellRenderer: (params: { value?: 'Fought via Groq AI' | 'Conceded' | 'Settled' }) => {
+          cellRenderer: (params: { value?: 'Pending Action' | 'Fought via Groq AI' | 'Conceded' | 'Settled' }) => {
+            if (params.value === 'Pending Action' || !params.value) {
+              return (
+                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                  <Clock className="w-3 h-3 text-slate-400" />
+                  <span>Pending Action</span>
+                </span>
+              );
+            }
             if (params.value === 'Fought via Groq AI') {
               return (
                 <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200">
